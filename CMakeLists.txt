@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 # Define the Cryptographic Hashing project
 project(libhash
-        VERSION 1.0.8.0
+        VERSION 1.0.9.0
         DESCRIPTION "Cryptographic Hashing Library"
         LANGUAGES CXX)
 
@@ -21,10 +21,11 @@ option(libhash_INSTALL "Install the Hashing Library" ON)
 # Determine whether clang-tidy will be performed
 option(libhash_CLANG_TIDY "Use clang-tidy to perform linting during build" OFF)
 
+# Ensure testing is enabled to surface tests in dependencies
+include(CTest)
+
 add_subdirectory(dependencies)
 add_subdirectory(src)
-
-include(CTest)
 
 if(BUILD_TESTING AND libhash_BUILD_TESTS)
     add_subdirectory(test)

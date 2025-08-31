@@ -1,5 +1,10 @@
 # Change Log
 
+v1.0.9
+
+- Updated library dependencies
+- CMake changes to support downstream unit testing
+
 v1.0.8
 
 - Updated library dependencies
