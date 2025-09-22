@@ -1,6 +1,15 @@
+# Include standard installation directory variables
+include(GNUInstallDirs)
+
 # Create the library
-add_library(hash STATIC hash.cpp hmac.cpp sha1.cpp sha224.cpp sha256.cpp
-                        sha384.cpp sha512.cpp)
+add_library(hash STATIC
+    hash.cpp
+    hmac.cpp
+    sha1.cpp
+    sha224.cpp
+    sha256.cpp
+    sha384.cpp
+    sha512.cpp)
 add_library(Terra::libhash ALIAS hash)
 
 # Specify the internal and public include directories
@@ -8,7 +17,8 @@ target_include_directories(hash
     PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
     PUBLIC
-        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 # Specify the C++ standard to observe
 set_target_properties(hash
@@ -38,7 +48,6 @@ target_link_libraries(hash PRIVATE Terra::secutil Terra::bitutil)
 
 # Install target and associated include files
 if(libhash_INSTALL)
-    include(GNUInstallDirs)
     install(TARGETS hash EXPORT libhashTargets ARCHIVE)
     install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ TYPE INCLUDE)
     install(EXPORT libhashTargets
