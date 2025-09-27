@@ -1,7 +1,7 @@
 /*
  *  sha256.h
  *
- *  Copyright (C) 2024
+ *  Copyright (C) 2024, 2025
  *  Terrapane Corporation
  *  All Rights Reserved
  *
@@ -43,6 +43,7 @@
 
 #pragma once
 
+#include <array>
 #include "hash.h"
 
 namespace Terra::Crypto::Hashing
@@ -73,11 +74,8 @@ class SHA256 final : public Hash
         // Message digest length (in octets)
         static constexpr std::size_t Digest_Octet_Count = 32;
 
-        // Type holding result of the SHA-256 computation
-        using SHA256ResultWords = std::uint32_t[Digest_Word_Count];
-
-        // Type holding result of the SHA-256 computation
-        using SHA256ResultOctets = std::uint8_t[Digest_Octet_Count];
+        // Message schedule array size
+        static constexpr std::size_t Message_Schedule_Size = 64;
 
         SHA256() noexcept;
         SHA256(const std::span<const std::uint8_t> data,
@@ -105,7 +103,7 @@ class SHA256 final : public Hash
         std::string Result() const override;
         std::span<std::uint8_t> Result(
                                 std::span<std::uint8_t> result) const override;
-        SHA256ResultWordSpan Result(SHA256ResultWordSpan result) const;
+        std::span<std::uint32_t> Result(std::span<std::uint32_t> result) const;
 
         constexpr std::size_t GetBlockSize() const noexcept override
         {
@@ -123,20 +121,28 @@ class SHA256 final : public Hash
         std::uint64_t GetMessageLength() const noexcept;
 
     protected:
-        void ProcessMessageBlock(const std::uint8_t message_block[Block_Size]);
+        void ProcessMessageBlock(
+            const std::span<const std::uint8_t, Block_Size> &message_block);
+
         void PadMessage();
 
-        std::uint64_t message_length;           // Total message length
-        std::size_t input_block_length;         // Current input block length
-        std::uint8_t input_block[Block_Size];   // Current input block
+        // Total message length
+        std::uint64_t message_length;
+
+        // Current input block length
+        std::size_t input_block_length;
+
+        // Current input block
+        std::array<std::uint8_t, Block_Size> input_block;
 
         // Message digest
-        std::uint32_t message_digest[Digest_Word_Count];
+        std::array<std::uint32_t, Digest_Word_Count> message_digest;
 
-        // Internal computation variables
-        std::uint32_t W[64];                    // Message schedule
-        std::uint32_t a, b, c, d, e, f, g, h;   // Working variables
-        std::uint32_t T;                        // Temporary variable
+        // Message schedule
+        std::array<std::uint32_t, Message_Schedule_Size> W;
+
+        // Working variables
+        std::uint32_t a, b, c, d, e, f, g, h, T;
 };
 
 } // namespace Terra::Crypto::Hashing

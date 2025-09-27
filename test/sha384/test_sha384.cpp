@@ -1,7 +1,7 @@
 /*
  *  test_sha384.cpp
  *
- *  Copyright (C) 2024
+ *  Copyright (C) 2024, 2025
  *  Terrapane Corporation
  *  All Rights Reserved
  *
@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <cstring>
 #include <terra/crypto/hashing/sha384.h>
+#include <terra/stf/adapters/integral_array.h>
 #include <terra/stf/stf.h>
 
 using namespace Terra;
@@ -418,11 +419,12 @@ STF_TEST(SHA384, TestResultArray)
 {
     SHA384 sha384("abc");
 
-    SHA384::SHA384ResultOctets result_array;
+    std::array<std::uint8_t, SHA384::Digest_Octet_Count> result_array;
 
     sha384.Result(result_array);
 
-    std::uint8_t expected_result_octets[] =
+    std::array<std::uint8_t, SHA384::Digest_Octet_Count>
+        expected_result_octets =
     {
         0xcb, 0x00, 0x75, 0x3f, 0x45, 0xa3, 0x5e, 0x8b,
         0xb5, 0xa0, 0x3d, 0x69, 0x9a, 0xc6, 0x50, 0x07,
@@ -432,7 +434,7 @@ STF_TEST(SHA384, TestResultArray)
         0x58, 0xba, 0xec, 0xa1, 0x34, 0xc8, 0x25, 0xa7
     };
 
-    STF_ASSERT_MEM_EQ(expected_result_octets, result_array, 48);
+    STF_ASSERT_EQ(expected_result_octets, result_array);
 }
 
 // Test result words
@@ -440,23 +442,18 @@ STF_TEST(SHA384, TestResultWords)
 {
     SHA384 sha384("abc");
 
-    SHA384::SHA384ResultWords result_words;
+    std::array<std::uint64_t, SHA384::Digest_Word_Count> result_words;
 
     sha384.Result(result_words);
 
-    SHA384::SHA384ResultWords expected_result_words =
+    std::array<std::uint64_t, SHA384::Digest_Word_Count> expected_result_words =
     {
         0xcb00753f45a35e8b, 0xb5a03d699ac65007,
         0x272c32ab0eded163, 0x1a8b605a43ff5bed,
         0x8086072ba1e7cc23, 0x58baeca134c825a7
     };
 
-    STF_ASSERT_EQ(expected_result_words[0], result_words[0]);
-    STF_ASSERT_EQ(expected_result_words[1], result_words[1]);
-    STF_ASSERT_EQ(expected_result_words[2], result_words[2]);
-    STF_ASSERT_EQ(expected_result_words[3], result_words[3]);
-    STF_ASSERT_EQ(expected_result_words[4], result_words[4]);
-    STF_ASSERT_EQ(expected_result_words[5], result_words[5]);
+    STF_ASSERT_EQ(expected_result_words, result_words);
 }
 
 // Test Input() function

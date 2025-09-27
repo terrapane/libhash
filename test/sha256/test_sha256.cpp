@@ -1,7 +1,7 @@
 /*
  *  test_sha256.cpp
  *
- *  Copyright (C) 2024
+ *  Copyright (C) 2024, 2025
  *  Terrapane Corporation
  *  All Rights Reserved
  *
@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <cstdint>
 #include <terra/crypto/hashing/sha256.h>
+#include <terra/stf/adapters/integral_array.h>
 #include <terra/stf/stf.h>
 
 using namespace Terra;
@@ -390,11 +391,12 @@ STF_TEST(SHA256, TestResultArray)
 {
     SHA256 sha256("abc");
 
-    SHA256::SHA256ResultOctets result_array;
+    std::array<std::uint8_t, SHA256::Digest_Octet_Count> result_array;
 
     sha256.Result(result_array);
 
-    std::uint8_t expected_result_octets[] =
+    std::array<std::uint8_t, SHA256::Digest_Octet_Count>
+        expected_result_octets =
     {
         0xba, 0x78, 0x16, 0xbf, 0x8f, 0x01, 0xcf, 0xea,
         0x41, 0x41, 0x40, 0xde, 0x5d, 0xae, 0x22, 0x23,
@@ -402,7 +404,7 @@ STF_TEST(SHA256, TestResultArray)
         0xb4, 0x10, 0xff, 0x61, 0xf2, 0x00, 0x15, 0xad
     };
 
-    STF_ASSERT_MEM_EQ(expected_result_octets, result_array, 32);
+    STF_ASSERT_EQ(expected_result_octets, result_array);
 }
 
 // Test result words
@@ -410,24 +412,17 @@ STF_TEST(SHA256, TestResultWords)
 {
     SHA256 sha256("abc");
 
-    SHA256::SHA256ResultWords result_words;
+    std::array<std::uint32_t, SHA256::Digest_Word_Count> result_words;
 
     sha256.Result(result_words);
 
-    SHA256::SHA256ResultWords expected_result_words =
+    std::array<std::uint32_t, SHA256::Digest_Word_Count> expected_result_words =
     {
         0xba7816bf, 0x8f01cfea, 0x414140de, 0x5dae2223,
         0xb00361a3, 0x96177a9c, 0xb410ff61, 0xf20015ad
     };
 
-    STF_ASSERT_EQ(expected_result_words[0], result_words[0]);
-    STF_ASSERT_EQ(expected_result_words[1], result_words[1]);
-    STF_ASSERT_EQ(expected_result_words[2], result_words[2]);
-    STF_ASSERT_EQ(expected_result_words[3], result_words[3]);
-    STF_ASSERT_EQ(expected_result_words[4], result_words[4]);
-    STF_ASSERT_EQ(expected_result_words[5], result_words[5]);
-    STF_ASSERT_EQ(expected_result_words[6], result_words[6]);
-    STF_ASSERT_EQ(expected_result_words[7], result_words[7]);
+    STF_ASSERT_EQ(expected_result_words, result_words);
 }
 
 // Test Input() function

@@ -1,7 +1,7 @@
 /*
  *  sha1.cpp
  *
- *  Copyright (C) 2024
+ *  Copyright (C) 2024, 2025
  *  Terrapane Corporation
  *  All Rights Reserved
  *
@@ -37,7 +37,7 @@ namespace
 {
 
 // SHA-1 constants defined in FIPS 180-4 section 4.2.1
-constexpr std::uint32_t K_t[] =
+constexpr std::array<std::uint32_t, 4> K_t =
 {
     0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6
 };
@@ -64,8 +64,8 @@ constexpr std::uint32_t SHA1_Maj(const std::uint32_t x,
 
 // Function to help populate the message schedule
 constexpr std::uint32_t GetMessageWord(
-                            const std::uint8_t message_block[SHA1::Block_Size],
-                            const std::size_t index)
+    const std::span<const std::uint8_t, SHA1::Block_Size> &message_block,
+    const std::size_t index)
 {
     return (static_cast<std::uint32_t>(message_block[index    ]) << 24) |
            (static_cast<std::uint32_t>(message_block[index + 1]) << 16) |
@@ -113,7 +113,7 @@ constexpr std::uint32_t GetMessageWord(
  *      a rotation step.
  */
 constexpr void Step3(const std::size_t t,
-                     std::uint32_t W[80],
+                     std::span<std::uint32_t, SHA1::Message_Schedule_Size> W,
                      const std::uint32_t a_,
                      std::uint32_t &b_,
                      std::uint32_t &e_,
@@ -239,8 +239,7 @@ SHA1::SHA1(const std::span<const std::uint8_t> data,
  *      None.
  */
 SHA1::SHA1(const std::string_view data, bool auto_finalize, bool spaces) :
-    SHA1(std::span<const std::uint8_t>(
-             reinterpret_cast<const std::uint8_t *>(data.data()), data.size()),
+    SHA1({reinterpret_cast<const std::uint8_t *>(data.data()), data.size()},
          auto_finalize,
          spaces)
 {
@@ -266,16 +265,16 @@ SHA1::SHA1(const std::string_view data, bool auto_finalize, bool spaces) :
 SHA1::~SHA1() noexcept
 {
     // For security reasons, zero all internal data
-    SecUtil::SecureErase(input_block, sizeof(input_block));
+    SecUtil::SecureErase(input_block);
     SecUtil::SecureErase(input_block_length);
     SecUtil::SecureErase(message_length);
-    SecUtil::SecureErase(W, sizeof(W));
+    SecUtil::SecureErase(W);
     SecUtil::SecureErase(a);
     SecUtil::SecureErase(b);
     SecUtil::SecureErase(c);
     SecUtil::SecureErase(d);
     SecUtil::SecureErase(e);
-    SecUtil::SecureErase(message_digest, sizeof(message_digest));
+    SecUtil::SecureErase(message_digest);
 }
 
 /*
@@ -311,21 +310,15 @@ bool SHA1::operator==(const SHA1 &other) const noexcept
     }
 
     // Compare the input block
-    if ((input_block_length > 0) &&
-        (std::memcmp(input_block, other.input_block, input_block_length) != 0))
+    if ((input_block_length > 0) && (std::memcmp(input_block.data(),
+                                                 other.input_block.data(),
+                                                 input_block_length) != 0))
     {
         return false;
     }
 
     // Compare the message digest values
-    if (std::memcmp(message_digest,
-                    other.message_digest,
-                    sizeof(message_digest)) != 0)
-    {
-        return false;
-    }
-
-    return true;
+    return message_digest == other.message_digest;
 }
 
 /*
@@ -439,12 +432,13 @@ void SHA1::Input(const std::span<const std::uint8_t> data)
         // When processing a full message block, no need to copy data
         if (to_be_consumed == Block_Size)
         {
-            ProcessMessageBlock(data.data() + consumed);
+            ProcessMessageBlock(std::span<const std::uint8_t, Block_Size>{
+                data.subspan(consumed, Block_Size)});
         }
         else
         {
             // Copy the partial message block into the input block buffer
-            std::memcpy(input_block + input_block_length,
+            std::memcpy(input_block.data() + input_block_length,
                         data.data() + consumed,
                         to_be_consumed);
 
@@ -501,9 +495,7 @@ void SHA1::Input(const std::string_view data)
     static_assert(CHAR_BIT == 8);
 
     // Provide the data to the Input function
-    Input(std::span<const std::uint8_t>{
-                    reinterpret_cast<const std::uint8_t *>(data.data()),
-                    data.size() });
+    Input({reinterpret_cast<const std::uint8_t *>(data.data()), data.size()});
 }
 
 /*
@@ -525,7 +517,8 @@ void SHA1::Input(const std::string_view data)
  *      preparation for computing the message digest.  Note that variable names
  *      specified here are defined in FIPS 180-4 section 6.1.2.
  */
-void SHA1::ProcessMessageBlock(const std::uint8_t message_block[Block_Size])
+void SHA1::ProcessMessageBlock(
+    const std::span<const std::uint8_t, Block_Size> &message_block)
 {
     // STEP 1
 
@@ -704,7 +697,7 @@ void SHA1::PadMessage()
     if (input_block_length > 56)
     {
         // Pad the input block with zeros
-        std::memset(input_block + input_block_length,
+        std::memset(input_block.data() + input_block_length,
                     0,
                     64 - input_block_length);
 
@@ -720,7 +713,7 @@ void SHA1::PadMessage()
     // Pad up to 448 bits (56 octets)
     if (input_block_length < 56)
     {
-        std::memset(input_block + input_block_length,
+        std::memset(input_block.data() + input_block_length,
                     0,
                     56 - input_block_length);
     }
@@ -840,7 +833,8 @@ std::span<std::uint8_t> SHA1::Result(std::span<std::uint8_t> result) const
  *
  *  Parameters:
  *      result [out]
- *          Contains the result of the message digest computation.
+ *          Contains the result of the message digest computation.  This must
+ *          be at least Digest_Word_Count elements in length.
  *
  *  Returns:
  *      This will return a span over the same input span, but with the
@@ -849,7 +843,7 @@ std::span<std::uint8_t> SHA1::Result(std::span<std::uint8_t> result) const
  *  Comments:
  *      None.
  */
-SHA1ResultWordSpan SHA1::Result(SHA1ResultWordSpan result) const
+std::span<std::uint32_t> SHA1::Result(std::span<std::uint32_t> result) const
 {
     // Ensure the internal data is not corrupted
     if (corrupted) throw HashException("SHA-1 message digest is corrupted");
@@ -867,7 +861,7 @@ SHA1ResultWordSpan SHA1::Result(SHA1ResultWordSpan result) const
     }
 
     // Place the message digest into the result vector
-    std::copy_n(message_digest, Digest_Word_Count, result.data());
+    std::copy(message_digest.begin(), message_digest.end(), result.begin());
 
     return result.first(Digest_Word_Count);
 }

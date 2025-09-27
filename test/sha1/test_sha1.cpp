@@ -1,7 +1,7 @@
 /*
  *  test_sha1.cpp
  *
- *  Copyright (C) 2024
+ *  Copyright (C) 2024, 2025
  *  Terrapane Corporation
  *  All Rights Reserved
  *
@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <cstdint>
 #include <terra/crypto/hashing/sha1.h>
+#include <terra/stf/adapters/integral_array.h>
 #include <terra/stf/stf.h>
 
 using namespace Terra;
@@ -387,20 +388,18 @@ STF_TEST(SHA1, TestResultArray)
 {
     SHA1 sha1("abc");
 
-    SHA1::SHA1ResultOctets result_array;
+    std::array<std::uint8_t, SHA1::Digest_Octet_Count> result_array;
 
     sha1.Result(result_array);
 
-    std::uint8_t expected_result_octets[] =
+    std::array<std::uint8_t, SHA1::Digest_Octet_Count> expected_result_octets =
     {
         0xa9, 0x99, 0x3e, 0x36, 0x47, 0x06, 0x81, 0x6a,
         0xba, 0x3e, 0x25, 0x71, 0x78, 0x50, 0xc2, 0x6c,
         0x9c, 0xd0, 0xd8, 0x9d
     };
 
-    STF_ASSERT_MEM_EQ(expected_result_octets,
-                      result_array,
-                      sizeof(result_array));
+    STF_ASSERT_EQ(expected_result_octets, result_array);
 }
 
 // Test result words
@@ -408,20 +407,16 @@ STF_TEST(SHA1, TestResultWords)
 {
     SHA1 sha1("abc");
 
-    SHA1::SHA1ResultWords result_words;
+    std::array<std::uint32_t, SHA1::Digest_Word_Count> result_words;
 
     sha1.Result(result_words);
 
-    std::uint32_t expected_result_words[] =
+    std::array<std::uint32_t, SHA1::Digest_Word_Count> expected_result_words =
     {
         0xa9993e36, 0x4706816a, 0xba3e2571, 0x7850c26c, 0x9cd0d89d
     };
 
-    STF_ASSERT_EQ(expected_result_words[0], result_words[0]);
-    STF_ASSERT_EQ(expected_result_words[1], result_words[1]);
-    STF_ASSERT_EQ(expected_result_words[2], result_words[2]);
-    STF_ASSERT_EQ(expected_result_words[3], result_words[3]);
-    STF_ASSERT_EQ(expected_result_words[4], result_words[4]);
+    STF_ASSERT_EQ(expected_result_words, result_words);
 }
 
 // Test Input() function

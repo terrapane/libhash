@@ -1,7 +1,7 @@
 /*
  *  sha384.cpp
  *
- *  Copyright (C) 2024
+ *  Copyright (C) 2024, 2025
  *  Terrapane Corporation
  *  All Rights Reserved
  *
@@ -37,7 +37,7 @@ namespace
 {
 
 // SHA-384 constants defined in FIPS 180-4 section 4.2.3
-constexpr std::uint64_t K_t[] =
+constexpr std::array<std::uint64_t, 80> K_t =
 {
     0x428a2f98d728ae22, 0x7137449123ef65cd,
     0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc,
@@ -83,14 +83,14 @@ constexpr std::uint64_t K_t[] =
 
 // Functions defined in FIPS 180-4 section 4.1.3
 constexpr std::uint64_t SHA384_Ch(const std::uint64_t x,
-                                         const std::uint64_t y,
-                                         const std::uint64_t z)
+                                  const std::uint64_t y,
+                                  const std::uint64_t z)
 {
     return (x & y) ^ ((~x) & z);
 }
 constexpr std::uint64_t SHA384_Maj(const std::uint64_t x,
-                                          const std::uint64_t y,
-                                          const std::uint64_t z)
+                                   const std::uint64_t y,
+                                   const std::uint64_t z)
 {
     return (x & y) ^ (x & z) ^ (y & z);
 }
@@ -117,8 +117,8 @@ constexpr std::uint64_t SHA384_sigma_1(const std::uint64_t x)
 
 // Function to help populate the message schedule
 constexpr std::uint64_t GetMessageWord(
-                        const std::uint8_t message_block[SHA384::Block_Size],
-                        const std::size_t index)
+    const std::span<const std::uint8_t, SHA384::Block_Size> &message_block,
+    const std::size_t index)
 {
     return (static_cast<std::uint64_t>(message_block[index    ]) << 56) |
            (static_cast<std::uint64_t>(message_block[index + 1]) << 48) |
@@ -182,7 +182,7 @@ constexpr std::uint64_t GetMessageWord(
  *      a rotation step.
  */
 constexpr void Step3(const std::size_t t,
-                     std::uint64_t W[64],
+                     std::span<std::uint64_t, SHA384::Message_Schedule_Size> W,
                      std::uint64_t &T,
                      const std::uint64_t a_,
                      const std::uint64_t b_,
@@ -349,10 +349,10 @@ SHA384::SHA384(const std::string_view data, bool auto_finalize, bool spaces) :
 SHA384::~SHA384() noexcept
 {
     // For security reasons, zero all internal data
-    SecUtil::SecureErase(input_block, sizeof(input_block));
+    SecUtil::SecureErase(input_block);
     SecUtil::SecureErase(input_block_length);
     SecUtil::SecureErase(&message_length, sizeof(message_length));
-    SecUtil::SecureErase(W, sizeof(W));
+    SecUtil::SecureErase(W);
     SecUtil::SecureErase(a);
     SecUtil::SecureErase(b);
     SecUtil::SecureErase(c);
@@ -362,7 +362,7 @@ SHA384::~SHA384() noexcept
     SecUtil::SecureErase(g);
     SecUtil::SecureErase(h);
     SecUtil::SecureErase(T);
-    SecUtil::SecureErase(message_digest, sizeof(message_digest));
+    SecUtil::SecureErase(message_digest);
 }
 
 /*
@@ -398,21 +398,15 @@ bool SHA384::operator==(const SHA384 &other) const noexcept
     }
 
     // Compare the input block
-    if ((input_block_length > 0) &&
-        (std::memcmp(input_block, other.input_block, input_block_length) != 0))
+    if ((input_block_length > 0) && (std::memcmp(input_block.data(),
+                                                 other.input_block.data(),
+                                                 input_block_length) != 0))
     {
         return false;
     }
 
-    // Compare the message digest
-    if (std::memcmp(message_digest,
-                    other.message_digest,
-                    sizeof(message_digest)) != 0)
-    {
-        return false;
-    }
-
-    return true;
+    // Compare the message digest values
+    return message_digest == other.message_digest;
 }
 
 /*
@@ -531,12 +525,13 @@ void SHA384::Input(const std::span<const std::uint8_t> data)
         // When processing a full message block, no need to copy data
         if (to_be_consumed == Block_Size)
         {
-            ProcessMessageBlock(data.data() + consumed);
+            ProcessMessageBlock(std::span<const std::uint8_t, Block_Size>{
+                data.subspan(consumed, Block_Size)});
         }
         else
         {
             // Copy the partial message block into the input block buffer
-            std::memcpy(input_block + input_block_length,
+            std::memcpy(input_block.data() + input_block_length,
                         data.data() + consumed,
                         to_be_consumed);
 
@@ -593,9 +588,7 @@ void SHA384::Input(const std::string_view data)
     static_assert(CHAR_BIT == 8);
 
     // Provide the data to the Input function
-    Input(std::span<const std::uint8_t>{
-                    reinterpret_cast<const std::uint8_t *>(data.data()),
-                    data.size() });
+    Input({reinterpret_cast<const std::uint8_t *>(data.data()), data.size()});
 }
 
 /*
@@ -617,7 +610,8 @@ void SHA384::Input(const std::string_view data)
  *      preparation for computing the message digest.  Note that variable names
  *      specified here are defined in FIPS 180-4 section 6.4.2.
  */
-void SHA384::ProcessMessageBlock(const std::uint8_t message_block[Block_Size])
+void SHA384::ProcessMessageBlock(
+    const std::span<const std::uint8_t, Block_Size> &message_block)
 {
     // STEP 1
 
@@ -802,7 +796,7 @@ void SHA384::PadMessage()
     if (input_block_length > 112)
     {
         // Pad the input block with zeros
-        std::memset(input_block + input_block_length,
+        std::memset(input_block.data() + input_block_length,
                     0,
                     128 - input_block_length);
 
@@ -818,7 +812,7 @@ void SHA384::PadMessage()
     // Pad up to 896 bits (112 octets)
     if (input_block_length < 112)
     {
-        std::memset(input_block + input_block_length,
+        std::memset(input_block.data() + input_block_length,
                     0,
                     112 - input_block_length);
     }
@@ -952,7 +946,8 @@ std::span<std::uint8_t> SHA384::Result(std::span<std::uint8_t> result) const
  *
  *  Parameters:
  *      result [out]
- *          Contains the result of the message digest computation.
+ *          Contains the result of the message digest computation.  This must
+ *          be at least Digest_Word_Count elements in length.
  *
  *  Returns:
  *      This will return a span over the same input span, but with the
@@ -961,7 +956,7 @@ std::span<std::uint8_t> SHA384::Result(std::span<std::uint8_t> result) const
  *  Comments:
  *      None.
  */
-SHA384ResultWordSpan SHA384::Result(SHA384ResultWordSpan result) const
+std::span<std::uint64_t> SHA384::Result(std::span<std::uint64_t> result) const
 {
     // Ensure the internal data is not corrupted
     if (corrupted) throw HashException("SHA-384 message digest is corrupted");
@@ -979,7 +974,7 @@ SHA384ResultWordSpan SHA384::Result(SHA384ResultWordSpan result) const
     }
 
     // Place the message digest into the result vector
-    std::copy_n(message_digest, Digest_Word_Count, result.data());
+    std::copy(message_digest.begin(), message_digest.end(), result.begin());
 
     return result.first(Digest_Word_Count);
 }

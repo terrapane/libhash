@@ -1,7 +1,7 @@
 /*
  *  test_sha512.cpp
  *
- *  Copyright (C) 2024
+ *  Copyright (C) 2024, 2025
  *  Terrapane Corporation
  *  All Rights Reserved
  *
@@ -499,11 +499,12 @@ STF_TEST(SHA512, TestResultArray)
 {
     SHA512 sha512("abc");
 
-    SHA512::SHA512ResultOctets result_array;
+    std::array<std::uint8_t, SHA512::Digest_Octet_Count> result_array;
 
     sha512.Result(result_array);
 
-    std::uint8_t expected_result_octets[] =
+    std::array<std::uint8_t, SHA512::Digest_Octet_Count>
+        expected_result_octets =
     {
         0xdd, 0xaf, 0x35, 0xa1, 0x93, 0x61, 0x7a, 0xba,
         0xcc, 0x41, 0x73, 0x49, 0xae, 0x20, 0x41, 0x31,
@@ -515,7 +516,7 @@ STF_TEST(SHA512, TestResultArray)
         0x2a, 0x9a, 0xc9, 0x4f, 0xa5, 0x4c, 0xa4, 0x9f
     };
 
-    STF_ASSERT_MEM_EQ(expected_result_octets, result_array, 64);
+    STF_ASSERT_EQ(expected_result_octets, result_array);
 }
 
 // Test result words
@@ -523,11 +524,11 @@ STF_TEST(SHA512, TestResultWords)
 {
     SHA512 sha512("abc");
 
-    SHA512::SHA512ResultWords result_words;
+    std::array<std::uint64_t, SHA512::Digest_Word_Count> result_words;
 
     sha512.Result(result_words);
 
-    SHA512::SHA512ResultWords expected_result_words =
+    std::array<std::uint64_t, SHA512::Digest_Word_Count> expected_result_words =
     {
         0xddaf35a193617aba, 0xcc417349ae204131,
         0x12e6fa4e89a97ea2, 0x0a9eeee64b55d39a,
@@ -535,14 +536,7 @@ STF_TEST(SHA512, TestResultWords)
         0x454d4423643ce80e, 0x2a9ac94fa54ca49f
     };
 
-    STF_ASSERT_EQ(expected_result_words[0], result_words[0]);
-    STF_ASSERT_EQ(expected_result_words[1], result_words[1]);
-    STF_ASSERT_EQ(expected_result_words[2], result_words[2]);
-    STF_ASSERT_EQ(expected_result_words[3], result_words[3]);
-    STF_ASSERT_EQ(expected_result_words[4], result_words[4]);
-    STF_ASSERT_EQ(expected_result_words[5], result_words[5]);
-    STF_ASSERT_EQ(expected_result_words[6], result_words[6]);
-    STF_ASSERT_EQ(expected_result_words[7], result_words[7]);
+    STF_ASSERT_EQ(expected_result_words, result_words);
 }
 
 // Test Input() function

@@ -43,13 +43,11 @@
 
 #pragma once
 
+#include <array>
 #include "hash.h"
 
 namespace Terra::Crypto::Hashing
 {
-
-// Result of the SHA-224 computation holding Digest_Word_Count words
-using SHA224ResultWordSpan = std::span<std::uint32_t>;
 
 // Define the SHA224 class
 class SHA224 final : public Hash
@@ -73,11 +71,8 @@ class SHA224 final : public Hash
         // Message digest length (in octets)
         static constexpr std::size_t Digest_Octet_Count = 28;
 
-        // Type holding result of the SHA-224 computation
-        using SHA224ResultWords = std::uint32_t[Digest_Word_Count];
-
-        // Type holding result of the SHA-224 computation
-        using SHA224ResultOctets = std::uint8_t[Digest_Octet_Count];
+        // Message schedule array size
+        static constexpr std::size_t Message_Schedule_Size = 64;
 
         SHA224() noexcept;
         SHA224(const std::span<const std::uint8_t> data,
@@ -105,7 +100,7 @@ class SHA224 final : public Hash
         std::string Result() const override;
         std::span<std::uint8_t> Result(
                                 std::span<std::uint8_t> result) const override;
-        SHA224ResultWordSpan Result(SHA224ResultWordSpan result) const;
+        std::span<std::uint32_t> Result(std::span<std::uint32_t> result) const;
 
         constexpr std::size_t GetBlockSize() const noexcept override
         {
@@ -123,21 +118,31 @@ class SHA224 final : public Hash
         std::uint64_t GetMessageLength() const noexcept;
 
     protected:
-        void ProcessMessageBlock(const std::uint8_t message_block[Block_Size]);
+        void ProcessMessageBlock(
+            const std::span<const std::uint8_t, Block_Size> &message_block);
+
         void PadMessage();
 
-        std::uint64_t message_length;           // Total message length
-        std::size_t input_block_length;         // Current input block length
-        std::uint8_t input_block[Block_Size];   // Current input block
+        // Total message length
+        std::uint64_t message_length;
 
-        // Message digest (one extra 32-bit word is used in the internal
-        // computation than the size of the output)
-        std::uint32_t message_digest[Digest_Word_Count + 1];
+        // Current input block length
+        std::size_t input_block_length;
 
-        // Internal computation variables
-        std::uint32_t W[64];                    // Message schedule
-        std::uint32_t a, b, c, d, e, f, g, h;   // Working variables
-        std::uint32_t T;                        // Temporary variable
+        // Current input block
+        std::array<std::uint8_t, Block_Size> input_block;
+
+        // Internal message digest (one extra 32-bit word is used in the
+        // internal computation than the size of the output)
+        static constexpr std::size_t Internal_Digest_Word_Count = 8;
+
+        std::array<std::uint32_t, Internal_Digest_Word_Count> message_digest;
+
+        // Message schedule
+        std::array<std::uint32_t, Message_Schedule_Size> W;
+
+        // Working variables
+        std::uint32_t a, b, c, d, e, f, g, h, T;
 };
 
 } // namespace Terra::Crypto::Hashing

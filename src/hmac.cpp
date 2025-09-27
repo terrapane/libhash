@@ -1,7 +1,7 @@
 /*
  *  hmac.cpp
  *
- *  Copyright (C) 2024
+ *  Copyright (C) 2024, 2025
  *  Terrapane Corporation
  *  All Rights Reserved
  *
@@ -332,10 +332,10 @@ HMAC::HMAC(const HMAC &other) :
     hash = CloneHashFunction(other.hash);
 
     // Copy the other values
-    std::memcpy(message_digest, other.message_digest, sizeof(message_digest));
-    std::memcpy(K0, other.K0, sizeof(K0));
-    std::memcpy(K0_ipad, other.K0_ipad, sizeof(K0_ipad));
-    std::memcpy(K0_opad, other.K0_opad, sizeof(K0_opad));
+    message_digest = other.message_digest;
+    K0 = other.K0;
+    K0_ipad = other.K0_ipad;
+    K0_opad = other.K0_opad;
 }
 
 /*
@@ -366,10 +366,10 @@ HMAC::HMAC(HMAC &&other) noexcept :
     K0_opad{}
 {
     // Copy the other values
-    std::memcpy(message_digest, other.message_digest, sizeof(message_digest));
-    std::memcpy(K0, other.K0, sizeof(K0));
-    std::memcpy(K0_ipad, other.K0_ipad, sizeof(K0_ipad));
-    std::memcpy(K0_opad, other.K0_opad, sizeof(K0_opad));
+    message_digest = other.message_digest;
+    K0 = other.K0;
+    K0_ipad = other.K0_ipad;
+    K0_opad = other.K0_opad;
 
     // Indicate "other" is no longer keyed
     other.keyed = false;
@@ -396,10 +396,10 @@ HMAC::~HMAC() noexcept
     SecUtil::SecureErase(hash_algorithm);
     SecUtil::SecureErase(keyed);
     SecUtil::SecureErase(block_size);
-    SecUtil::SecureErase(message_digest, sizeof(message_digest));
-    SecUtil::SecureErase(K0, sizeof(K0));
-    SecUtil::SecureErase(K0_ipad, sizeof(K0_ipad));
-    SecUtil::SecureErase(K0_opad, sizeof(K0_opad));
+    SecUtil::SecureErase(message_digest);
+    SecUtil::SecureErase(K0);
+    SecUtil::SecureErase(K0_ipad);
+    SecUtil::SecureErase(K0_opad);
 }
 
 /*
@@ -431,10 +431,10 @@ HMAC &HMAC::operator=(const HMAC &other)
     space_separate_words = other.space_separate_words;
     keyed = other.keyed;
     block_size = other.block_size;
-    std::memcpy(message_digest, other.message_digest, sizeof(message_digest));
-    std::memcpy(K0, other.K0, sizeof(K0));
-    std::memcpy(K0_ipad, other.K0_ipad, sizeof(K0_ipad));
-    std::memcpy(K0_opad, other.K0_opad, sizeof(K0_opad));
+    message_digest = other.message_digest;
+    K0 = other.K0;
+    K0_ipad = other.K0_ipad;
+    K0_opad = other.K0_opad;
 
     return *this;
 }
@@ -468,10 +468,10 @@ HMAC &HMAC::operator=(HMAC &&other) noexcept
     space_separate_words = other.space_separate_words;
     keyed = other.keyed;
     block_size = other.block_size;
-    std::memcpy(message_digest, other.message_digest, sizeof(message_digest));
-    std::memcpy(K0, other.K0, sizeof(K0));
-    std::memcpy(K0_ipad, other.K0_ipad, sizeof(K0_ipad));
-    std::memcpy(K0_opad, other.K0_opad, sizeof(K0_opad));
+    message_digest = other.message_digest;
+    K0 = other.K0;
+    K0_ipad = other.K0_ipad;
+    K0_opad = other.K0_opad;
 
     // Indicate "other" is no longer keyed
     other.keyed = false;
@@ -523,17 +523,17 @@ bool HMAC::operator==(const HMAC &other) const noexcept
     }
 
     // Compare the message digest values
-    if (std::memcmp(message_digest,
-                    other.message_digest,
+    if (std::memcmp(message_digest.data(),
+                    other.message_digest.data(),
                     hash->GetDigestLength()) != 0)
     {
         return false;
     }
 
     // Compare the keying buffers
-    if (std::memcmp(K0, other.K0, sizeof(K0)) != 0) return false;
-    if (std::memcmp(K0_ipad, other.K0_ipad, sizeof(K0_ipad)) != 0) return false;
-    if (std::memcmp(K0_opad, other.K0_opad, sizeof(K0_opad)) != 0) return false;
+    if (K0 != other.K0) return false;
+    if (K0_ipad != other.K0_ipad) return false;
+    if (K0_opad != other.K0_opad) return false;
 
     return true;
 }
@@ -583,10 +583,10 @@ void HMAC::Reset()
     if (hash) hash->Reset();
 
     // Clear the message digest
-    std::memset(message_digest, 0, sizeof(message_digest));
+    message_digest = {};
 
     // Feed the hashing algorithm K0 ^ ipad if key provided
-    if (keyed) hash->Input({K0_ipad, block_size});
+    if (keyed) hash->Input({K0_ipad.data(), block_size});
 }
 
 /*
@@ -636,7 +636,7 @@ void HMAC::SetKey(const std::span<const std::uint8_t> key)
         hash->Reset();
 
         // Zero the key buffer
-        std::memset(K0, 0, sizeof(K0));
+        K0 = {};
 
         // Reset the key boolean in case of failure
         keyed = false;
@@ -646,7 +646,7 @@ void HMAC::SetKey(const std::span<const std::uint8_t> key)
     if (key.size() <= block_size)
     {
         // Copy the key and zeros fill the balance of the K0 buffer
-        std::memcpy(K0, key.data(), key.size());
+        std::memcpy(K0.data(), key.data(), key.size());
     }
     else
     {
@@ -665,7 +665,7 @@ void HMAC::SetKey(const std::span<const std::uint8_t> key)
     }
 
     // Feed the hashing algorithm K0 ^ ipad
-    hash->Input({K0_ipad, block_size});
+    hash->Input({K0_ipad.data(), block_size});
 
     // Indicate that the hash object has been keyed
     keyed = true;
@@ -810,10 +810,10 @@ void HMAC::Finalize()
         hash->Reset();
 
         // Feed the hashing algorithm K0 ^ opad
-        hash->Input({K0_opad, block_size});
+        hash->Input({K0_opad.data(), block_size});
 
         // Concatenate the previously computed hash
-        hash->Input({message_digest, hash->GetDigestLength()});
+        hash->Input({message_digest.data(), hash->GetDigestLength()});
 
         // Finalize the result of the outer hash
         hash->Finalize();

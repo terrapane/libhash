@@ -1,7 +1,7 @@
 /*
  *  sha384.h
  *
- *  Copyright (C) 2024
+ *  Copyright (C) 2024, 2025
  *  Terrapane Corporation
  *  All Rights Reserved
  *
@@ -43,13 +43,11 @@
 
 #pragma once
 
+#include <array>
 #include "hash.h"
 
 namespace Terra::Crypto::Hashing
 {
-
-// Result of the SHA-384 computation holding Digest_Word_Count words
-using SHA384ResultWordSpan = std::span<std::uint64_t>;
 
 // Define a structure to hold the 128-bit message length
 struct SHA384MessageLength
@@ -131,11 +129,8 @@ class SHA384 final : public Hash
         // Message digest length (in octets)
         static constexpr std::size_t Digest_Octet_Count = 48;
 
-        // Type holding result of the SHA-384 computation
-        using SHA384ResultWords = std::uint64_t[Digest_Word_Count];
-
-        // Type holding result of the SHA-384 computation
-        using SHA384ResultOctets = std::uint8_t[Digest_Octet_Count];
+        // Message schedule array size
+        static constexpr std::size_t Message_Schedule_Size = 80;
 
         SHA384() noexcept;
         SHA384(const std::span<const std::uint8_t> data,
@@ -163,7 +158,7 @@ class SHA384 final : public Hash
         std::string Result() const override;
         std::span<std::uint8_t> Result(
                                 std::span<std::uint8_t> result) const override;
-        SHA384ResultWordSpan Result(SHA384ResultWordSpan result) const;
+        std::span<std::uint64_t> Result(std::span<std::uint64_t> result) const;
 
         constexpr std::size_t GetBlockSize() const noexcept override
         {
@@ -181,23 +176,31 @@ class SHA384 final : public Hash
         SHA384MessageLength GetMessageLength() const noexcept;
 
     protected:
-        void ProcessMessageBlock(const std::uint8_t message_block[Block_Size]);
+        void ProcessMessageBlock(
+            const std::span<const std::uint8_t, Block_Size> &message_block);
+
         void PadMessage();
 
-        SHA384MessageLength message_length;     // Total message length
-        std::size_t input_block_length;         // Current input block length
-        std::uint8_t input_block[Block_Size];   // Current input block
+        // Total message length
+        SHA384MessageLength message_length;
+
+        // Current input block length
+        std::size_t input_block_length;
+
+        // Current input block
+        std::array<std::uint8_t, Block_Size> input_block;
 
         // Internal message digest length (in words)
         static constexpr std::size_t Internal_Digest_Word_Count = 8;
 
         // Message digest
-        std::uint64_t message_digest[Internal_Digest_Word_Count];
+        std::array<std::uint64_t, Internal_Digest_Word_Count> message_digest;
 
-        // Internal computation variables
-        std::uint64_t W[80];                    // Message schedule
-        std::uint64_t a, b, c, d, e, f, g, h;   // Working variables
-        std::uint64_t T;                        // Temporary variable
+        // Message schedule
+        std::array<std::uint64_t, Message_Schedule_Size> W;
+
+        // Working variables
+        std::uint64_t a, b, c, d, e, f, g, h, T;
 };
 
 } // namespace Terra::Crypto::Hashing

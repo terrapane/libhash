@@ -1,7 +1,7 @@
 /*
  *  sha256.cpp
  *
- *  Copyright (C) 2024
+ *  Copyright (C) 2024, 2025
  *  Terrapane Corporation
  *  All Rights Reserved
  *
@@ -37,7 +37,7 @@ namespace
 {
 
 // SHA-256 constants defined in FIPS 180-4 section 4.2.2
-constexpr std::uint32_t K_t[] =
+constexpr std::array<std::uint32_t, 64> K_t =
 {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
     0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -93,8 +93,8 @@ constexpr std::uint32_t SHA256_sigma_1(const std::uint32_t x)
 
 // Function to help populate the message schedule
 constexpr std::uint32_t GetMessageWord(
-                        const std::uint8_t message_block[SHA256::Block_Size],
-                        const std::size_t index)
+    const std::span<const std::uint8_t, SHA256::Block_Size> &message_block,
+    const std::size_t index)
 {
     return (static_cast<std::uint32_t>(message_block[index    ]) << 24) |
            (static_cast<std::uint32_t>(message_block[index + 1]) << 16) |
@@ -154,7 +154,7 @@ constexpr std::uint32_t GetMessageWord(
  *      a rotation step.
  */
 constexpr void Step3(const std::size_t t,
-                     std::uint32_t W[64],
+                     std::span<std::uint32_t, SHA256::Message_Schedule_Size> W,
                      std::uint32_t &T,
                      const std::uint32_t a_,
                      const std::uint32_t b_,
@@ -321,10 +321,10 @@ SHA256::SHA256(const std::string_view data, bool auto_finalize, bool spaces) :
 SHA256::~SHA256() noexcept
 {
     // For security reasons, zero all internal data
-    SecUtil::SecureErase(input_block, sizeof(input_block));
+    SecUtil::SecureErase(input_block);
     SecUtil::SecureErase(input_block_length);
     SecUtil::SecureErase(message_length);
-    SecUtil::SecureErase(W, sizeof(W));
+    SecUtil::SecureErase(W);
     SecUtil::SecureErase(a);
     SecUtil::SecureErase(b);
     SecUtil::SecureErase(c);
@@ -334,7 +334,7 @@ SHA256::~SHA256() noexcept
     SecUtil::SecureErase(g);
     SecUtil::SecureErase(h);
     SecUtil::SecureErase(T);
-    SecUtil::SecureErase(message_digest, sizeof(message_digest));
+    SecUtil::SecureErase(message_digest);
 }
 
 /*
@@ -370,21 +370,15 @@ bool SHA256::operator==(const SHA256 &other) const noexcept
     }
 
     // Compare the input block
-    if ((input_block_length > 0) &&
-        (std::memcmp(input_block, other.input_block, input_block_length) != 0))
+    if ((input_block_length > 0) && (std::memcmp(input_block.data(),
+                                                 other.input_block.data(),
+                                                 input_block_length) != 0))
     {
         return false;
     }
 
-    // Compare the message digest
-    if (std::memcmp(message_digest,
-                    other.message_digest,
-                    sizeof(message_digest)) != 0)
-    {
-        return false;
-    }
-
-    return true;
+    // Compare the message digest values
+    return message_digest == other.message_digest;
 }
 
 /*
@@ -501,12 +495,13 @@ void SHA256::Input(const std::span<const std::uint8_t> data)
         // When processing a full message block, no need to copy data
         if (to_be_consumed == Block_Size)
         {
-            ProcessMessageBlock(data.data() + consumed);
+            ProcessMessageBlock(std::span<const std::uint8_t, Block_Size>{
+                data.subspan(consumed, Block_Size)});
         }
         else
         {
             // Copy the partial message block into the input block buffer
-            std::memcpy(input_block + input_block_length,
+            std::memcpy(input_block.data() + input_block_length,
                         data.data() + consumed,
                         to_be_consumed);
 
@@ -563,9 +558,7 @@ void SHA256::Input(const std::string_view data)
     static_assert(CHAR_BIT == 8);
 
     // Provide the data to the Input function
-    Input(std::span<const std::uint8_t>{
-                    reinterpret_cast<const std::uint8_t *>(data.data()),
-                    data.size() });
+    Input({reinterpret_cast<const std::uint8_t *>(data.data()), data.size()});
 }
 
 /*
@@ -587,7 +580,8 @@ void SHA256::Input(const std::string_view data)
  *      preparation for computing the message digest.  Note that variable names
  *      specified here are defined in FIPS 180-4 section 6.2.2.
  */
-void SHA256::ProcessMessageBlock(const std::uint8_t message_block[Block_Size])
+void SHA256::ProcessMessageBlock(
+    const std::span<const std::uint8_t, Block_Size> &message_block)
 {
     // STEP 1
 
@@ -756,7 +750,7 @@ void SHA256::PadMessage()
     if (input_block_length > 56)
     {
         // Pad the input block with zeros
-        std::memset(input_block + input_block_length,
+        std::memset(input_block.data() + input_block_length,
                     0,
                     64 - input_block_length);
 
@@ -772,7 +766,7 @@ void SHA256::PadMessage()
     // Pad up to 448 bits (56 octets)
     if (input_block_length < 56)
     {
-        std::memset(input_block + input_block_length,
+        std::memset(input_block.data() + input_block_length,
                     0,
                     56 - input_block_length);
     }
@@ -892,7 +886,8 @@ std::span<std::uint8_t> SHA256::Result(std::span<std::uint8_t> result) const
  *
  *  Parameters:
  *      result [out]
- *          Contains the result of the message digest computation.
+ *          Contains the result of the message digest computation.  This must
+ *          be at least Digest_Word_Count elements in length.
  *
  *  Returns:
  *      This will return a span over the same input span, but with the
@@ -901,7 +896,7 @@ std::span<std::uint8_t> SHA256::Result(std::span<std::uint8_t> result) const
  *  Comments:
  *      None.
  */
-SHA256ResultWordSpan SHA256::Result(SHA256ResultWordSpan result) const
+std::span<std::uint32_t> SHA256::Result(std::span<std::uint32_t> result) const
 {
     // Ensure the internal data is not corrupted
     if (corrupted) throw HashException("SHA-256 message digest is corrupted");
@@ -919,7 +914,7 @@ SHA256ResultWordSpan SHA256::Result(SHA256ResultWordSpan result) const
     }
 
     // Place the message digest into the result vector
-    std::copy_n(message_digest, Digest_Word_Count, result.data());
+    std::copy(message_digest.begin(), message_digest.end(), result.begin());
 
     return result.first(Digest_Word_Count);
 }

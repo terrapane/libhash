@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <cstdint>
 #include <terra/crypto/hashing/sha224.h>
+#include <terra/stf/adapters/integral_array.h>
 #include <terra/stf/stf.h>
 
 using namespace Terra;
@@ -401,11 +402,12 @@ STF_TEST(SHA224, TestResultArray)
 {
     SHA224 sha224("abc");
 
-    SHA224::SHA224ResultOctets result_array;
+    std::array<std::uint8_t, SHA224::Digest_Octet_Count> result_array;
 
     sha224.Result(result_array);
 
-    std::uint8_t expected_result_octets[] =
+    std::array<std::uint8_t, SHA224::Digest_Octet_Count>
+        expected_result_octets =
     {
         0x23, 0x09, 0x7d, 0x22, 0x34, 0x05, 0xd8, 0x22,
         0x86, 0x42, 0xa4, 0x77, 0xbd, 0xa2, 0x55, 0xb3,
@@ -413,7 +415,7 @@ STF_TEST(SHA224, TestResultArray)
         0xe3, 0x6c, 0x9d, 0xa7
     };
 
-    STF_ASSERT_MEM_EQ(expected_result_octets, result_array, 28);
+    STF_ASSERT_EQ(expected_result_octets, result_array);
 }
 
 // Test result words
@@ -421,23 +423,17 @@ STF_TEST(SHA224, TestResultWords)
 {
     SHA224 sha224("abc");
 
-    SHA224::SHA224ResultWords result_words;
+    std::array<std::uint32_t, SHA224::Digest_Word_Count> result_words;
 
     sha224.Result(result_words);
 
-    SHA224::SHA224ResultWords expected_result_words =
+    std::array<std::uint32_t, SHA224::Digest_Word_Count> expected_result_words =
     {
         0x23097d22, 0x3405d822, 0x8642a477, 0xbda255b3,
         0x2aadbce4, 0xbda0b3f7, 0xe36c9da7
     };
 
-    STF_ASSERT_EQ(expected_result_words[0], result_words[0]);
-    STF_ASSERT_EQ(expected_result_words[1], result_words[1]);
-    STF_ASSERT_EQ(expected_result_words[2], result_words[2]);
-    STF_ASSERT_EQ(expected_result_words[3], result_words[3]);
-    STF_ASSERT_EQ(expected_result_words[4], result_words[4]);
-    STF_ASSERT_EQ(expected_result_words[5], result_words[5]);
-    STF_ASSERT_EQ(expected_result_words[6], result_words[6]);
+    STF_ASSERT_EQ(expected_result_words, result_words);
 }
 
 // Test Input() function

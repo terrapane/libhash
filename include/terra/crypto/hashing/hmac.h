@@ -1,7 +1,7 @@
 /*
  *  hmac.h
  *
- *  Copyright (C) 2024
+ *  Copyright (C) 2024, 2025
  *  Terrapane Corporation
  *  All Rights Reserved
  *
@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <string_view>
 #include <span>
+#include <array>
 #include <memory>
 #include "hash.h"
 
@@ -99,10 +100,10 @@ class HMAC
         bool space_separate_words;
         bool keyed;
         std::size_t block_size;
-        std::uint8_t message_digest[Max_Digest];
-        std::uint8_t K0[Max_Block_Size];
-        std::uint8_t K0_ipad[Max_Block_Size];
-        std::uint8_t K0_opad[Max_Block_Size];
+        std::array<std::uint8_t, Max_Digest> message_digest;
+        std::array<std::uint8_t, Max_Block_Size> K0;
+        std::array<std::uint8_t, Max_Block_Size> K0_ipad;
+        std::array<std::uint8_t, Max_Block_Size> K0_opad;
 };
 
 // Streaming operator
