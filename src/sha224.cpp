@@ -468,7 +468,7 @@ void SHA224::Input(const std::span<const std::uint8_t> data)
     std::size_t consumed = 0;
     std::size_t to_be_consumed = 0;
 
-    // Only on 64-bit CPUs or larger can the size exceed the limit
+    // Only on 64-bit CPUs or larger can the input size exceed the limit
     if constexpr (sizeof(std::size_t) >= 8)
     {
         // Ensure that the length is less than 2^61 octets

@@ -491,10 +491,14 @@ void SHA384::Input(const std::span<const std::uint8_t> data)
     std::size_t consumed = 0;
     std::size_t to_be_consumed = 0;
 
-    // Ensure that the length doesn't exceed the maximum length
-    if (SHA384MessageLength{ data.size(), 0 } > Max_Message_Size)
+    // Only on 128-bit CPUs or larger can the input size exceed the limit
+    if constexpr (sizeof(std::size_t) >= 16)
     {
-        throw HashException("Input length too long");
+        // Ensure that the length doesn't exceed the maximum length
+        if (SHA384MessageLength{ data.size(), 0 } > Max_Message_Size)
+        {
+            throw HashException("Input length too long");
+        }
     }
 
     // Ensure the internal data is not corrupted
