@@ -4,6 +4,7 @@ v1.0.10
 
 - CMake changes
 - Updated dependencies
+- Minor changes to support compiling on 32-bit processors without warning
 
 v1.0.9
 
