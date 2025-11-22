@@ -1,5 +1,10 @@
 # Change Log
 
+v1.0.11
+
+- Corrected a bug in SHA384::Result(std::span<std::uint64_t>) that caused
+  a buffer overrun
+
 v1.0.10
 
 - CMake changes

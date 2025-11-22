@@ -978,7 +978,7 @@ std::span<std::uint64_t> SHA384::Result(std::span<std::uint64_t> result) const
     }
 
     // Place the message digest into the result vector
-    std::copy(message_digest.begin(), message_digest.end(), result.begin());
+    std::copy_n(message_digest.begin(), Digest_Word_Count, result.begin());
 
     return result.first(Digest_Word_Count);
 }
