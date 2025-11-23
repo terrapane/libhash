@@ -726,7 +726,7 @@ void SHA1::PadMessage()
     std::uint64_t length = message_length << 3;
     for (std::size_t i = 63; i > 55; i--)
     {
-        input_block[i] = (length & 0xff);
+        input_block[i] = length & 0xff;
         length >>= 8;
     }
 
@@ -818,10 +818,10 @@ std::span<std::uint8_t> SHA1::Result(std::span<std::uint8_t> result) const
 
     for (std::size_t i = 0, j = 0; i < Digest_Word_Count; i++, j += 4)
     {
-        result[j    ] = ((message_digest[i] >> 24) & 0xff);
-        result[j + 1] = ((message_digest[i] >> 16) & 0xff);
-        result[j + 2] = ((message_digest[i] >>  8) & 0xff);
-        result[j + 3] = ((message_digest[i]      ) & 0xff);
+        result[j    ] = (message_digest[i] >> 24) & 0xff;
+        result[j + 1] = (message_digest[i] >> 16) & 0xff;
+        result[j + 2] = (message_digest[i] >>  8) & 0xff;
+        result[j + 3] = (message_digest[i]      ) & 0xff;
     }
 
     return result.first(Digest_Octet_Count);
@@ -865,7 +865,7 @@ std::span<std::uint32_t> SHA1::Result(std::span<std::uint32_t> result) const
     }
 
     // Place the message digest into the result vector
-    std::copy(message_digest.begin(), message_digest.end(), result.begin());
+    std::ranges::copy(message_digest, result.begin());
 
     return result.first(Digest_Word_Count);
 }

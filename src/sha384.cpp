@@ -830,12 +830,12 @@ void SHA384::PadMessage()
     length_low <<= 3;
     for (std::size_t i = 119; i > 111; i--)
     {
-        input_block[i] = (length_high & 0xff);
+        input_block[i] = length_high & 0xff;
         length_high >>= 8;
     }
     for (std::size_t i = 127; i > 119; i--)
     {
-        input_block[i] = (length_low & 0xff);
+        input_block[i] = length_low & 0xff;
         length_low >>= 8;
     }
 
@@ -927,14 +927,14 @@ std::span<std::uint8_t> SHA384::Result(std::span<std::uint8_t> result) const
 
     for (std::size_t i = 0, j = 0; i < Digest_Word_Count; i++, j += 8)
     {
-        result[j    ] = ((message_digest[i] >> 56) & 0xff);
-        result[j + 1] = ((message_digest[i] >> 48) & 0xff);
-        result[j + 2] = ((message_digest[i] >> 40) & 0xff);
-        result[j + 3] = ((message_digest[i] >> 32) & 0xff);
-        result[j + 4] = ((message_digest[i] >> 24) & 0xff);
-        result[j + 5] = ((message_digest[i] >> 16) & 0xff);
-        result[j + 6] = ((message_digest[i] >>  8) & 0xff);
-        result[j + 7] = ((message_digest[i]      ) & 0xff);
+        result[j    ] = (message_digest[i] >> 56) & 0xff;
+        result[j + 1] = (message_digest[i] >> 48) & 0xff;
+        result[j + 2] = (message_digest[i] >> 40) & 0xff;
+        result[j + 3] = (message_digest[i] >> 32) & 0xff;
+        result[j + 4] = (message_digest[i] >> 24) & 0xff;
+        result[j + 5] = (message_digest[i] >> 16) & 0xff;
+        result[j + 6] = (message_digest[i] >>  8) & 0xff;
+        result[j + 7] = (message_digest[i]      ) & 0xff;
     }
 
     return result.first(Digest_Octet_Count);
@@ -978,7 +978,9 @@ std::span<std::uint64_t> SHA384::Result(std::span<std::uint64_t> result) const
     }
 
     // Place the message digest into the result vector
-    std::copy_n(message_digest.begin(), Digest_Word_Count, result.begin());
+    std::ranges::copy_n(message_digest.begin(),
+                        Digest_Word_Count,
+                        result.begin());
 
     return result.first(Digest_Word_Count);
 }

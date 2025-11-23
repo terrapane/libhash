@@ -4,6 +4,11 @@ v1.0.11
 
 - Corrected a bug in SHA384::Result(std::span<std::uint64_t>) that caused
   a buffer overrun
+- Removed a few superfluous parentheses
+- Changed the HMAC move constructor to assign values during construction
+- Switched std::copy or std::copy_n to std::ranges::copy and std::ranges::copy_n
+  when copying results; std::memcpy is still employed in the code where
+  performance is important
 
 v1.0.10
 

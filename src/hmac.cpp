@@ -323,19 +323,13 @@ HMAC::HMAC(const HMAC &other) :
     space_separate_words{other.space_separate_words},
     keyed{other.keyed},
     block_size{other.block_size},
-    message_digest{},
-    K0{},
-    K0_ipad{},
-    K0_opad{}
+    message_digest{other.message_digest},
+    K0{other.K0},
+    K0_ipad{other.K0_ipad},
+    K0_opad{other.K0_opad}
 {
     // Clone the hash object
     hash = CloneHashFunction(other.hash);
-
-    // Copy the other values
-    message_digest = other.message_digest;
-    K0 = other.K0;
-    K0_ipad = other.K0_ipad;
-    K0_opad = other.K0_opad;
 }
 
 /*
@@ -360,17 +354,11 @@ HMAC::HMAC(HMAC &&other) noexcept :
     space_separate_words{other.space_separate_words},
     keyed{other.keyed},
     block_size{other.block_size},
-    message_digest{},
-    K0{},
-    K0_ipad{},
-    K0_opad{}
+    message_digest{other.message_digest},
+    K0{other.K0},
+    K0_ipad{other.K0_ipad},
+    K0_opad{other.K0_opad}
 {
-    // Copy the other values
-    message_digest = other.message_digest;
-    K0 = other.K0;
-    K0_ipad = other.K0_ipad;
-    K0_opad = other.K0_opad;
-
     // Indicate "other" is no longer keyed
     other.keyed = false;
 }
