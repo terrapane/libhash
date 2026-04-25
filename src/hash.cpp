@@ -229,8 +229,8 @@ Hash &Hash::operator<<(const std::string_view data)
 
     // Provide the data to the Input function
     Input(std::span<const std::uint8_t>{
-                    reinterpret_cast<const std::uint8_t *>(data.data()),
-                    data.size() });
+        reinterpret_cast<const std::uint8_t *>(data.data()),
+        data.size()});
 
     // Return a reference to this object
     return *this;

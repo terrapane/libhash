@@ -3,6 +3,8 @@
 v1.0.12 (in progress)
 
 - Changed code so that "hashing" was replaced with "hash"
+- Formatting changes
+- Improvement in use of std::span
 
 v1.0.11
 
@@ -10,7 +12,7 @@ v1.0.11
   a buffer overrun
 - Removed a few superfluous parentheses
 - Changed the HMAC move constructor to assign values during construction
-- Switched std::copy or std::copy_n to std::ranges::copy and std::ranges::copy_n
+- Switched std::copy or std::copy\_n to std::ranges::copy and std::ranges::copy\_n
   when copying results; std::memcpy is still employed in the code where
   performance is important
 

@@ -528,8 +528,7 @@ void SHA384::Input(const std::span<const std::uint8_t> data)
         // When processing a full message block, no need to copy data
         if (to_be_consumed == Block_Size)
         {
-            ProcessMessageBlock(std::span<const std::uint8_t, Block_Size>{
-                data.subspan(consumed, Block_Size)});
+            ProcessMessageBlock(data.subspan(consumed).first<Block_Size>());
         }
         else
         {
