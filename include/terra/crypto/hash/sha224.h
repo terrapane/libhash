@@ -1,7 +1,7 @@
 /*
  *  sha224.h
  *
- *  Copyright (C) 2025
+ *  Copyright (C) 2025, 2026
  *  Terrapane Corporation
  *  All Rights Reserved
  *

@@ -1,7 +1,7 @@
 /*
  *  test_sha224.cpp
  *
- *  Copyright (C) 2025
+ *  Copyright (C) 2025, 2026
  *  Terrapane Corporation
  *  All Rights Reserved
  *
