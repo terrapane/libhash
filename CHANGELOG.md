@@ -1,6 +1,6 @@
 # Change Log
 
-v1.0.12 (in progress)
+v1.1.0
 
 - Changed code so that "hashing" was replaced with "hash"
 - Formatting changes
