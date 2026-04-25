@@ -1,6 +1,6 @@
-# Cryptographic Hashing Library
+# Cryptographic Hash Library
 
-This library implements various cryptographic hashing algorithms and related
+This library implements various cryptographic hash algorithms and related
 functions.  In this context, a hash value is also sometimes called a message
 digest.
 
@@ -15,13 +15,13 @@ The algorithms contained in this library include:
 
 ## Usage Examples
 
-Note that for all of the following examples, the hashing related objects are
-within the namespace `Terra::Crypto::Hashing`.  The namespace is left out for
+Note that for all of the following examples, the hash related objects are
+within the namespace `Terra::Crypto::Hash`.  The namespace is left out for
 brevity.  In the test code, one will note the use of
-`using Terra::Crypto::Hashing` also for brevity.  In commercial applications,
+`using Terra::Crypto::Hash` also for brevity.  In commercial applications,
 it does make sense to retain the namespace or at least some part of it.
 Alternatively, one might define a shorter alias (e.g.,
-`namespace TCH = Terra::Crypto::Hashing`).  The library uses the longer
+`namespace TCH = Terra::Crypto::Hash`).  The library uses the longer
 namespace names to avoid naming conflicts in our own code and third-party
 code.
 
@@ -62,8 +62,8 @@ std::string result = sha256.Result();
 
 ### Creating a Hash object
 
-Each of the hashing algorithms is derived from the abstract base class
-Hashing::Hash.  To create an instance as a unique pointer, one calls the
+Each of the hash algorithms is derived from the abstract base class
+Hash::Hash.  To create an instance as a unique pointer, one calls the
 following function and specifying the algorithm to use:
 
 ```cpp

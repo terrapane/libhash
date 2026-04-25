@@ -1,7 +1,7 @@
 /*
- *  sha256.h
+ *  sha224.h
  *
- *  Copyright (C) 2024, 2025
+ *  Copyright (C) 2025
  *  Terrapane Corporation
  *  All Rights Reserved
  *
@@ -9,24 +9,24 @@
  *      Paul E. Jones <paulej@packetizer.com>
  *
  *  Description:
- *      This file defines the object SHA256, which implements the Secure
- *      Hashing Algorithm SHA-256 as defined in FIPS 180-4.
+ *      This file defines the object SHA224, which implements the Secure
+ *      Hash Algorithm SHA-224 as defined in FIPS 180-4.
  *
  *      Note that while FIPS 180-4 specifies that a message may be any number
  *      of bits in length from 0..(2^64)-1, this object will only operate on
  *      messages containing an integral number of octets.
  *
  *      Example simplified usage:
- *          SHA256 sha256("abc");
- *          std::cout << "Hash: " << sha256 << std::endl;
+ *          SHA224 sha224("abc");
+ *          std::cout << "Hash: " << sha224 << std::endl;
  *
  *      Typical usage example:
- *          SHA256 sha256;
- *          sha256.Input(some_string_data);
- *          sha256.Input(more_string_data);
- *          sha256.Finalize();
- *          SHA256ResultOctets result;
- *          sha256.Result(result);
+ *          SHA224 sha224;
+ *          sha224.Input(some_string_data);
+ *          sha224.Input(more_string_data);
+ *          sha224.Finalize();
+ *          SHA224ResultOctets result;
+ *          sha224.Result(result);
  *
  *      Input may be provided via the constructor or via one of the Input()
  *      functions.  Once all of the data has been provided to the object, one
@@ -46,14 +46,11 @@
 #include <array>
 #include "hash.h"
 
-namespace Terra::Crypto::Hashing
+namespace Terra::Crypto::Hash
 {
 
-// Result of the SHA-256 computation holding Digest_Word_Count words
-using SHA256ResultWordSpan = std::span<std::uint32_t>;
-
-// Define the SHA256 class
-class SHA256 final : public Hash
+// Define the SHA224 class
+class SHA224 final : public Hash
 {
     public:
         // Maximum message size per FIPS 180-4 (in octets)
@@ -69,29 +66,29 @@ class SHA256 final : public Hash
         static constexpr std::size_t Word_Size = 32;
 
         // Message digest length (in words)
-        static constexpr std::size_t Digest_Word_Count = 8;
+        static constexpr std::size_t Digest_Word_Count = 7;
 
         // Message digest length (in octets)
-        static constexpr std::size_t Digest_Octet_Count = 32;
+        static constexpr std::size_t Digest_Octet_Count = 28;
 
         // Message schedule array size
         static constexpr std::size_t Message_Schedule_Size = 64;
 
-        SHA256() noexcept;
-        SHA256(const std::span<const std::uint8_t> data,
+        SHA224() noexcept;
+        SHA224(const std::span<const std::uint8_t> data,
                bool auto_finalize = true,
                bool spaces = true);
-        SHA256(const std::string_view data,
+        SHA224(const std::string_view data,
                bool auto_finalize = true,
                bool spaces = true);
-        SHA256(const SHA256 &other) = default;
-        SHA256(SHA256 &&other) = default;
-        virtual ~SHA256() noexcept;
+        SHA224(const SHA224 &other) = default;
+        SHA224(SHA224 &&other) = default;
+        virtual ~SHA224() noexcept;
 
-        SHA256 &operator=(const SHA256 &other) = default;
-        SHA256 &operator=(SHA256 &&other) = default;
-        bool operator==(const SHA256 &other) const noexcept;
-        bool operator!=(const SHA256 &other) const noexcept;
+        SHA224 &operator=(const SHA224 &other) = default;
+        SHA224 &operator=(SHA224 &&other) = default;
+        bool operator==(const SHA224 &other) const noexcept;
+        bool operator!=(const SHA224 &other) const noexcept;
 
         void Reset() noexcept override;
 
@@ -115,7 +112,7 @@ class SHA256 final : public Hash
         }
         constexpr HashAlgorithm GetHashAlgorithm() const noexcept override
         {
-            return HashAlgorithm::SHA256;
+            return HashAlgorithm::SHA224;
         }
 
         std::uint64_t GetMessageLength() const noexcept;
@@ -135,8 +132,11 @@ class SHA256 final : public Hash
         // Current input block
         std::array<std::uint8_t, Block_Size> input_block;
 
-        // Message digest
-        std::array<std::uint32_t, Digest_Word_Count> message_digest;
+        // Internal message digest (one extra 32-bit word is used in the
+        // internal computation than the size of the output)
+        static constexpr std::size_t Internal_Digest_Word_Count = 8;
+
+        std::array<std::uint32_t, Internal_Digest_Word_Count> message_digest;
 
         // Message schedule
         std::array<std::uint32_t, Message_Schedule_Size> W;
@@ -145,4 +145,4 @@ class SHA256 final : public Hash
         std::uint32_t a, b, c, d, e, f, g, h, T;
 };
 
-} // namespace Terra::Crypto::Hashing
+} // namespace Terra::Crypto::Hash

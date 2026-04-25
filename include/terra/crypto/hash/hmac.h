@@ -11,7 +11,7 @@
  *  Description:
  *      This file defines the keyed Hash Message Authentication Code (HMAC)
  *      logic defined in FIPS 198-1.  It is intended for use with the
- *      hashing functions implemented in this library.
+ *      hash functions implemented in this library.
  *
  *  Portability Issues:
  *      This code assumes the compiler and platform can support 64-bit integers.
@@ -27,7 +27,7 @@
 #include <memory>
 #include "hash.h"
 
-namespace Terra::Crypto::Hashing
+namespace Terra::Crypto::Hash
 {
 
 // Define the HMAC class
@@ -109,4 +109,4 @@ class HMAC
 // Streaming operator
 std::ostream &operator<<(std::ostream &o, const HMAC &hmac);
 
-} // namespace Terra::Crypto::Hashing
+} // namespace Terra::Crypto::Hash

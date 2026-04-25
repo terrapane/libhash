@@ -18,9 +18,9 @@
  */
 
 #include <terra/stf/stf.h>
-#include <terra/crypto/hashing/hmac.h>
+#include <terra/crypto/hash/hmac.h>
 
-using namespace Terra::Crypto::Hashing;
+using namespace Terra::Crypto::Hash;
 
 STF_TEST(HMAC, SHA1_Test1)
 {
@@ -865,7 +865,7 @@ STF_TEST(HMAC, TestOutputWithSpaces)
 
     HMAC hmac(HashAlgorithm::SHA1, key);
 
-    // Stream characters to the hashing algorithm
+    // Stream characters to the hash algorithm
     hmac << "The quick brown fox jumps over the lazy dog";
     hmac.Finalize();
 
@@ -883,7 +883,7 @@ STF_TEST(HMAC, TestOutputWithoutSpaces)
 
     HMAC hmac(HashAlgorithm::SHA1, key, false);
 
-    // Stream characters to the hashing algorithm
+    // Stream characters to the hash algorithm
     hmac << "The quick brown fox jumps over the lazy dog";
     hmac.Finalize();
 
@@ -921,7 +921,7 @@ STF_TEST(HMAC, TestReset)
 
     HMAC hmac(HashAlgorithm::SHA1, key, false);
 
-    // Stream characters to the hashing algorithm
+    // Stream characters to the hash algorithm
     hmac << "The quick brown fox jumps over the lazy dog";
     hmac.Finalize();
 
@@ -937,7 +937,7 @@ STF_TEST(HMAC, TestReset)
     oss.str(std::string());
     oss.clear();
 
-    // Stream characters to the hashing algorithm
+    // Stream characters to the hash algorithm
     hmac << "The quick brown fox jumps over the lazy dog";
     hmac.Finalize();
 
@@ -1000,7 +1000,7 @@ STF_TEST(HMAC, TestCopyConstructor)
 
     HMAC hmac(HashAlgorithm::SHA1, key);
 
-    // Stream characters to the hashing algorithm
+    // Stream characters to the hash algorithm
     hmac << "The quick brown fox jumps over the lazy dog";
 
     // Copy the HMAC
@@ -1032,7 +1032,7 @@ STF_TEST(HMAC, TestMoveConstructor)
 
     HMAC hmac(HashAlgorithm::SHA1, key);
 
-    // Stream characters to the hashing algorithm
+    // Stream characters to the hash algorithm
     hmac << "The quick brown fox jumps over the lazy dog";
     hmac.Finalize();
 

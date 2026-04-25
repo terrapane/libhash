@@ -10,7 +10,7 @@
  *
  *  Description:
  *      This file defines the object SHA384, which implements the Secure
- *      Hashing Algorithm SHA-384 as defined in FIPS 180-4.
+ *      Hash Algorithm SHA-384 as defined in FIPS 180-4.
  *
  *      Note that while FIPS 180-4 specifies that a message may be any number
  *      of bits in length from 0..(2^128)-1, this object will only operate on
@@ -46,7 +46,7 @@
 #include <array>
 #include "hash.h"
 
-namespace Terra::Crypto::Hashing
+namespace Terra::Crypto::Hash
 {
 
 // Define a structure to hold the 128-bit message length
@@ -203,4 +203,4 @@ class SHA384 final : public Hash
         std::uint64_t a, b, c, d, e, f, g, h, T;
 };
 
-} // namespace Terra::Crypto::Hashing
+} // namespace Terra::Crypto::Hash

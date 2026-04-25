@@ -11,7 +11,7 @@
  *  Description:
  *      This file implements the functions of the base object Hash for the
  *      cryptographic hash functions implemented in this library.  Those are
- *      presently some of the Secure Hashing Algorithms defined in FIPS 180-4.
+ *      presently some of the Secure Hash Algorithms defined in FIPS 180-4.
  *
  *  Portability Issues:
  *      This code assumes the compiler and platform can support 64-bit integers.
@@ -19,31 +19,30 @@
 
 #include <climits>
 #include <cstring>
-#include <terra/crypto/hashing/hash.h>
-#include <terra/crypto/hashing/sha1.h>
-#include <terra/crypto/hashing/sha224.h>
-#include <terra/crypto/hashing/sha256.h>
-#include <terra/crypto/hashing/sha384.h>
-#include <terra/crypto/hashing/sha512.h>
+#include <terra/crypto/hash/hash.h>
+#include <terra/crypto/hash/sha1.h>
+#include <terra/crypto/hash/sha224.h>
+#include <terra/crypto/hash/sha256.h>
+#include <terra/crypto/hash/sha384.h>
+#include <terra/crypto/hash/sha512.h>
 #include <terra/secutil/secure_erase.h>
 
-namespace Terra::Crypto::Hashing
+namespace Terra::Crypto::Hash
 {
 
 /*
  *  GetHashDigestLength()
  *
  *  Description:
- *      Returns the number of octets produced by the specified hashing
- *      algorithm.
+ *      Returns the number of octets produced by the specified hash algorithm.
  *
  *  Parameters:
  *      hash_algorithm [in]
- *          The hashing algorithm for which the output length is sought.
+ *          The hash algorithm for which the output length is sought.
  *
  *  Returns:
- *      The number of octets produced as output by the specified hashing
- *      algorithm or zero if there was an error.
+ *      The number of octets produced as output by the specified hash algorithm
+ *      or zero if there was an error.
  *
  *  Comments:
  *      None.
@@ -213,9 +212,9 @@ bool Hash::operator!=(const Hash &other) const noexcept
  *
  *  Parameters:
  *      data [in]
- *          The data to be provided as input.  The maximum length of the
- *          data that may be hashed depends on the hashing algorithm.  This
- *          should be documented in each of the algorithms.
+ *          The data to be provided as input.  The maximum length of the data
+ *          that may be hashed depends on the hash algorithm.  This should be
+ *          documented in each of the algorithms.
  *
  *  Returns:
  *      A reference to this object.
@@ -335,17 +334,15 @@ std::ostream &operator<<(std::ostream &os, const Hash &hash)
  *
  *  Description:
  *      This function will produce a hash object as a unique pointer for
- *      the specified hashing algorithm.
+ *      the specified hash algorithm.
  *
  *  Parameters:
  *      hash_algorithm [in]
- *          The hashing algorithm that should be implemented by the Hash
- *          object.
+ *          The hash algorithm that should be implemented by the Hash object.
  *
  *  Returns:
  *      A unique pointer to a Hash object implementing the specified algorithm.
- *      An exception will be thrown if the specified hashing algorithm is
- *      unknown.
+ *      An exception will be thrown if the specified hash algorithm is unknown.
  *
  *  Comments:
  *      None.
@@ -379,11 +376,11 @@ HashPointer CreateHashObject(HashAlgorithm algorithm)
         default:
             static_assert(static_cast<unsigned>(HashAlgorithm::Unknown) == 5,
                           "New hash algorithms need explicit support here");
-            throw HashException("Unknown hashing function requested");
+            throw HashException("Unknown hash function requested");
             break;
     }
 
     return hash;
 }
 
-} // namespace Terra::Crypto::Hashing
+} // namespace Terra::Crypto::Hash

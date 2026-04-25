@@ -10,7 +10,7 @@
  *
  *  Description:
  *      This file implements the object SHA224, which implements the Secure
- *      Hashing Algorithm SHA-224 as defined in FIPS 180-4.
+ *      Hash Algorithm SHA-224 as defined in FIPS 180-4.
  *
  *      Note that while FIPS 180-4 specifies that a message may be any number
  *      of bits in length from 0..(2^64)-1, this object will only operate on
@@ -32,12 +32,12 @@
 #include <iomanip>
 #include <sstream>
 #include <climits>
-#include <terra/crypto/hashing/sha224.h>
+#include <terra/crypto/hash/sha224.h>
 #include <terra/secutil/secure_erase.h>
 #include <terra/bitutil/bit_rotation.h>
 #include <terra/bitutil/bit_shift.h>
 
-namespace Terra::Crypto::Hashing
+namespace Terra::Crypto::Hash
 {
 
 namespace
@@ -448,8 +448,7 @@ void SHA224::Reset() noexcept
  *  SHA224::Input()
  *
  *  Description:
- *      This function is used to feed the SHA-224 hashing algorithm with
- *      input data.
+ *      This function is used to feed the SHA-224 hash algorithm with input.
  *
  *  Parameters:
  *      data [in]
@@ -548,12 +547,11 @@ void SHA224::Input(const std::span<const std::uint8_t> data)
  *  SHA224::Input()
  *
  *  Description:
- *      This function is used to feed the SHA-224 hashing algorithm with
- *      input data.
+ *      This function is used to feed the SHA-224 hash algorithm with input.
  *
  *  Parameters:
  *      data [in]
- *          A string of octets to provide as input into the hashing algorithm.
+ *          A string of octets to provide as input into the hash algorithm.
  *
  *  Returns:
  *      Nothing.
@@ -577,7 +575,7 @@ void SHA224::Input(const std::string_view data)
  *
  *  Description:
  *      This function will consume a 64-octet (512-bit) message block,
- *      performing the specified hashing operations on the block.
+ *      performing the specified hash operations on the block.
  *
  *  Parameters:
  *      message_block [in]
@@ -955,4 +953,4 @@ std::uint64_t SHA224::GetMessageLength() const noexcept
     return message_length;
 }
 
-} // namespace Terra::Crypto::Hashing
+} // namespace Terra::Crypto::Hash

@@ -11,7 +11,7 @@
  *  Description:
  *      This file implements the keyed Hash Message Authentication Code (HMAC)
  *      logic defined in FIPS 198-1.  It is intended for use with the
- *      hashing functions implemented in this library.
+ *      hash functions implemented in this library.
  *
  *      In the event that std::move() is used to move the HMAC object to a
  *      different object, the hash pointer will be invalid.  For this reason,
@@ -27,15 +27,15 @@
 #include <cstring>
 #include <climits>
 #include <algorithm>
-#include <terra/crypto/hashing/hmac.h>
-#include <terra/crypto/hashing/sha1.h>
-#include <terra/crypto/hashing/sha224.h>
-#include <terra/crypto/hashing/sha256.h>
-#include <terra/crypto/hashing/sha384.h>
-#include <terra/crypto/hashing/sha512.h>
+#include <terra/crypto/hash/hmac.h>
+#include <terra/crypto/hash/sha1.h>
+#include <terra/crypto/hash/sha224.h>
+#include <terra/crypto/hash/sha256.h>
+#include <terra/crypto/hash/sha384.h>
+#include <terra/crypto/hash/sha512.h>
 #include <terra/secutil/secure_erase.h>
 
-namespace Terra::Crypto::Hashing
+namespace Terra::Crypto::Hash
 {
 
 // It is assumed that a character is eight bits
@@ -51,7 +51,7 @@ namespace
  *      This function will copy the object stored in the unique pointer.
  *      The reason for this special function is that since Hash is a pure
  *      virtual object, a deep copy is required that is based on the actual
- *      underlying hashing object (e.g., SHA1, SHA256, etc).
+ *      underlying hash object (e.g., SHA1, SHA256, etc).
  *
  *  Parameters:
  *      source [out]
@@ -71,7 +71,7 @@ std::unique_ptr<Hash> CloneHashFunction(const std::unique_ptr<Hash> &source)
     // Ensure the source object is valid
     if (!source) throw HashException("The source hash object is invalid");
 
-    // Create an object to do hashing based on the type requested
+    // Create a hash object based on the algorithm requested
     switch (source->GetHashAlgorithm())
     {
         case HashAlgorithm::SHA1:
@@ -102,7 +102,7 @@ std::unique_ptr<Hash> CloneHashFunction(const std::unique_ptr<Hash> &source)
         default:
             static_assert(static_cast<unsigned>(HashAlgorithm::Unknown) == 5,
                           "New hash algorithms need explicit support here");
-            throw HashException("Unknown hashing function requested");
+            throw HashException("Unknown hash function requested");
             break;
     }
 
@@ -140,7 +140,7 @@ bool CompareHashFunction(const std::unique_ptr<Hash> &hash1,
     // Ensure the two objects are of the same type
     if (hash1->GetHashAlgorithm() != hash2->GetHashAlgorithm()) return false;
 
-    // Create an object to do hashing based on the type requested
+    // Create a hash object based on the algorithm requested
     switch (hash1->GetHashAlgorithm())
     {
         case HashAlgorithm::SHA1:
@@ -171,7 +171,7 @@ bool CompareHashFunction(const std::unique_ptr<Hash> &hash1,
         default:
             static_assert(static_cast<unsigned>(HashAlgorithm::Unknown) == 5,
                           "New hash algorithms need explicit support here");
-            throw HashException("Unknown hashing function requested");
+            throw HashException("Unknown hash function requested");
             break;
     }
 
@@ -188,8 +188,8 @@ bool CompareHashFunction(const std::unique_ptr<Hash> &hash1,
  *
  *  Parameters:
  *      hash_algorithm [in]
- *          The hashing algorithm to use for computing an HMAC.  The user
- *          must call SetKey() before attempting to provide input.
+ *          The hash algorithm to use for computing an HMAC.  The user must
+ *          call SetKey() before attempting to provide input.
  *
  *  Returns:
  *      Nothing.
@@ -214,7 +214,7 @@ HMAC::HMAC(const HashAlgorithm hash_algorithm) :
     hash = CreateHashObject(hash_algorithm);
 
     // Ensure the pointer is valid
-    if (!hash) throw HashException("Failed to create hashing object");
+    if (!hash) throw HashException("Failed to create hash object");
 
     // Set spacing preference
     hash->SpaceSeparateWords(space_separate_words);
@@ -231,7 +231,7 @@ HMAC::HMAC(const HashAlgorithm hash_algorithm) :
  *
  *  Parameters:
  *      hash_algorithm [in]
- *          The hashing algorithm to use for computing an HMAC.
+ *          The hash algorithm to use for computing an HMAC.
  *
  *      key [in]
  *          The key to use with this keyed HMAC.
@@ -272,7 +272,7 @@ HMAC::HMAC(const HashAlgorithm hash_algorithm,
  *
  *  Parameters:
  *      hash_algorithm [in]
- *          The hashing algorithm to use for computing an HMAC.
+ *          The hash algorithm to use for computing an HMAC.
  *
  *      key [in]
  *          The key to use with this keyed HMAC.
@@ -495,7 +495,7 @@ bool HMAC::operator==(const HMAC &other) const noexcept
 
     try
     {
-        // Compare the underlying hashing objects
+        // Compare the underlying hash objects
         if (!CompareHashFunction(hash, other.hash)) return false;
     }
     catch (const HashException &)
@@ -573,7 +573,7 @@ void HMAC::Reset()
     // Clear the message digest
     message_digest = {};
 
-    // Feed the hashing algorithm K0 ^ ipad if key provided
+    // Feed the hash algorithm K0 ^ ipad if key provided
     if (keyed) hash->Input({K0_ipad.data(), block_size});
 }
 
@@ -608,7 +608,7 @@ void HMAC::SetKey(const std::span<const std::uint8_t> key)
         hash = CreateHashObject(hash_algorithm);
 
         // Ensure the pointer is valid
-        if (!hash) throw HashException("Failed to create hashing object");
+        if (!hash) throw HashException("Failed to create hash object");
 
         // Set spacing preference
         hash->SpaceSeparateWords(space_separate_words);
@@ -652,7 +652,7 @@ void HMAC::SetKey(const std::span<const std::uint8_t> key)
         K0_opad[i] = K0[i] ^ opad;
     }
 
-    // Feed the hashing algorithm K0 ^ ipad
+    // Feed the hash algorithm K0 ^ ipad
     hash->Input({K0_ipad.data(), block_size});
 
     // Indicate that the hash object has been keyed
@@ -689,13 +689,12 @@ void HMAC::SetKey(const std::string_view key)
  *  HMAC::Input()
  *
  *  Description:
- *      This function is used to feed the underlying hashing algorithm with
- *      input data.
+ *      This function is used to feed the underlying hash algorithm with input.
  *
  *  Parameters:
  *      data [in]
  *          A span over an array of octets to be used as input.  The length
- *          must not exceed the maximum message size of the underlying hashing
+ *          must not exceed the maximum message size of the underlying hash
  *          algorithm.
  *
  *  Returns:
@@ -716,13 +715,12 @@ void HMAC::Input(const std::span<const std::uint8_t> data)
  *  HMAC::Input()
  *
  *  Description:
- *      This function is used to feed the underlying hashing algorithm with
- *      input data.
+ *      This function is used to feed the underlying hash algorithm with input.
  *
  *  Parameters:
  *      data [in]
  *          A string of octets to provide as input.  The length must not exceed
- *          the maximum message size of the underlying hashing algorithm.
+ *          the maximum message size of the underlying hash algorithm.
  *
  *  Returns:
  *      Nothing.
@@ -788,16 +786,16 @@ void HMAC::Finalize()
 
     if (!hash->IsFinalized())
     {
-        // Finalize the hashing object
+        // Finalize the hash object
         hash->Finalize();
 
         // Get the result of the inner hash
         hash->Result(message_digest);
 
-        // Reset the hashing function
+        // Reset the hash function
         hash->Reset();
 
-        // Feed the hashing algorithm K0 ^ opad
+        // Feed the hash algorithm K0 ^ opad
         hash->Input({K0_opad.data(), block_size});
 
         // Concatenate the previously computed hash
@@ -825,7 +823,7 @@ void HMAC::Finalize()
  */
 std::string HMAC::Result() const
 {
-    if (!hash) throw HashException("No hashing object exists");
+    if (!hash) throw HashException("No hash object exists");
 
     return hash->Result();
 }
@@ -846,14 +844,14 @@ std::string HMAC::Result() const
  *      octets in the hash result.  The length of the result depends on the
  *      underlying hash function.  To determine the octet length, call
  *      GetHMACLength().  This length is always constant for a given
- *      hashing algorithm.
+ *      hash algorithm.
  *
  *  Comments:
  *      None.
  */
 std::span<std::uint8_t> HMAC::Result(std::span<std::uint8_t> result) const
 {
-    if (!hash) throw HashException("No hashing object exists");
+    if (!hash) throw HashException("No hash object exists");
 
     return hash->Result(result);
 }
@@ -885,4 +883,4 @@ std::ostream &operator<<(std::ostream &o, const HMAC &hmac)
     return o;
 }
 
-} // namespace Terra::Crypto::Hashing
+} // namespace Terra::Crypto::Hash

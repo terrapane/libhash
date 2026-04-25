@@ -1,5 +1,9 @@
 # Change Log
 
+v1.0.12 (in progress)
+
+- Changed code so that "hashing" was replaced with "hash"
+
 v1.0.11
 
 - Corrected a bug in SHA384::Result(std::span<std::uint64_t>) that caused

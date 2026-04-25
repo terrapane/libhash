@@ -21,12 +21,12 @@
 #include <sstream>
 #include <stdexcept>
 #include <cstdint>
-#include <terra/crypto/hashing/sha1.h>
+#include <terra/crypto/hash/sha1.h>
 #include <terra/stf/adapters/integral_array.h>
 #include <terra/stf/stf.h>
 
 using namespace Terra;
-using namespace Terra::Crypto::Hashing;
+using namespace Terra::Crypto::Hash;
 
 //
 // Test vectors

@@ -11,7 +11,7 @@
  *  Description:
  *      This file defines the an abstract base object Hash for the
  *      cryptographic hash functions implemented in this library.  Those are
- *      presently some of the Secure Hashing Algorithms defined in FIPS 180-4.
+ *      presently some of the Secure Hash Algorithms defined in FIPS 180-4.
  *
  *      Example simplified usage:
  *          HashPointer hash = std::make_unique<SHA256>("abc");
@@ -51,7 +51,7 @@
 #include <memory>
 #include <stdexcept>
 
-namespace Terra::Crypto::Hashing
+namespace Terra::Crypto::Hash
 {
 
 // Enum to define supported hash function types
@@ -69,16 +69,15 @@ enum class HashAlgorithm
  *  GetHashDigestLength()
  *
  *  Description:
- *      Returns the number of octets produced by the specified hashing
- *      algorithm.
+ *      Returns the number of octets produced by the specified hash algorithm.
  *
  *  Parameters:
  *      hash_algorithm [in]
- *          The hashing algorithm for which the output length is sought.
+ *          The hash algorithm for which the output length is sought.
  *
  *  Returns:
- *      The number of octets produced as output by the specified hashing
- *      algorithm or zero if there was an error.
+ *      The number of octets produced as output by the specified hash algorithm
+ *      or zero if there was an error.
  *
  *  Comments:
  *      None.
@@ -144,12 +143,11 @@ std::ostream &operator<<(std::ostream &os, const Hash &hash);
  *
  *  Description:
  *      This function will produce a hash object as a unique pointer for
- *      the specified hashing algorithm.
+ *      the specified hash algorithm.
  *
  *  Parameters:
  *      hash_algorithm [in]
- *          The hashing algorithm that should be implemented by the Hash
- *          object.
+ *          The hash algorithm that should be implemented by the Hash object.
  *
  *  Returns:
  *      A unique pointer to a Hash object implementing the specified algorithm.
@@ -160,4 +158,4 @@ std::ostream &operator<<(std::ostream &os, const Hash &hash);
  */
 HashPointer CreateHashObject(HashAlgorithm hash_algorithm);
 
-} // namespace Terra::Crypto::Hashing
+} // namespace Terra::Crypto::Hash

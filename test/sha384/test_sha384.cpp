@@ -22,12 +22,12 @@
 #include <stdexcept>
 #include <cstdint>
 #include <cstring>
-#include <terra/crypto/hashing/sha384.h>
+#include <terra/crypto/hash/sha384.h>
 #include <terra/stf/adapters/integral_array.h>
 #include <terra/stf/stf.h>
 
 using namespace Terra;
-using namespace Terra::Crypto::Hashing;
+using namespace Terra::Crypto::Hash;
 
 //
 // Test vectors

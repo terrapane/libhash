@@ -16,10 +16,10 @@
  */
 
 #include <terra/stf/stf.h>
-#include <terra/crypto/hashing/hash.h>
-#include <terra/crypto/hashing/sha256.h>
+#include <terra/crypto/hash/hash.h>
+#include <terra/crypto/hash/sha256.h>
 
-using namespace Terra::Crypto::Hashing;
+using namespace Terra::Crypto::Hash;
 
 STF_TEST(HASH, HashDigest)
 {
