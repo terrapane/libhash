@@ -27,6 +27,7 @@
 #include <cstring>
 #include <climits>
 #include <algorithm>
+#include <ranges>
 #include <terra/crypto/hash/hmac.h>
 #include <terra/crypto/hash/sha1.h>
 #include <terra/crypto/hash/sha224.h>
@@ -634,7 +635,7 @@ void HMAC::SetKey(const std::span<const std::uint8_t> key)
     if (key.size() <= block_size)
     {
         // Copy the key and zeros fill the balance of the K0 buffer
-        std::memcpy(K0.data(), key.data(), key.size());
+        std::ranges::copy(key, K0.begin());
     }
     else
     {

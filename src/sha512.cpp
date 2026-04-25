@@ -25,6 +25,7 @@
 #include <iomanip>
 #include <sstream>
 #include <climits>
+#include <ranges>
 #include <terra/crypto/hash/sha512.h>
 #include <terra/secutil/secure_erase.h>
 #include <terra/bitutil/bit_rotation.h>
@@ -533,9 +534,9 @@ void SHA512::Input(const std::span<const std::uint8_t> data)
         else
         {
             // Copy the partial message block into the input block buffer
-            std::memcpy(input_block.data() + input_block_length,
-                        data.data() + consumed,
-                        to_be_consumed);
+            std::ranges::copy(
+                data.subspan(consumed, to_be_consumed),
+                std::span(input_block).subspan(input_block_length).begin());
 
             input_block_length += to_be_consumed;
 
