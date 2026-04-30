@@ -26,6 +26,7 @@
 #include <sstream>
 #include <climits>
 #include <ranges>
+#include <span>
 #include <terra/crypto/hash/sha1.h>
 #include <terra/secutil/secure_erase.h>
 #include <terra/bitutil/bit_rotation.h>
@@ -692,16 +693,19 @@ void SHA1::Finalize()
  */
 void SHA1::PadMessage()
 {
+    // Define a span over the input_block array (for bounds checking)
+    auto input_view = std::span(input_block);
+
     // Append 0x80 to the end of the message
-    input_block[input_block_length++] = 0x80;
+    input_view[input_block_length++] = 0x80;
 
     // Pad out to a full input block if we have more than 448 bits (56 octets)
     if (input_block_length > 56)
     {
         // Pad the input block with zeros
-        std::memset(input_block.data() + input_block_length,
-                    0,
-                    64 - input_block_length);
+        std::ranges::fill(input_view.subspan(input_block_length,
+                                             Block_Size - input_block_length),
+                          static_cast<std::uint8_t>(0));
 
         // The input block is now 64 octets, but that will be reset below
 
@@ -715,16 +719,16 @@ void SHA1::PadMessage()
     // Pad up to 448 bits (56 octets)
     if (input_block_length < 56)
     {
-        std::memset(input_block.data() + input_block_length,
-                    0,
-                    56 - input_block_length);
+        std::ranges::fill(
+            input_view.subspan(input_block_length, 56 - input_block_length),
+            static_cast<std::uint8_t>(0));
     }
 
     // The final 64 bits contain the message length (convert length to bits)
     std::uint64_t length = message_length << 3;
     for (std::size_t i = 63; i > 55; i--)
     {
-        input_block[i] = length & 0xff;
+        input_view[i] = length & 0xff;
         length >>= 8;
     }
 
@@ -767,10 +771,13 @@ std::string SHA1::Result() const
 
     oss << std::hex << std::setfill('0');
 
+    // Define a span for the benefit of bounds checking
+    const auto digest_view = std::span(message_digest);
+
     for (std::size_t i = 0; i < Digest_Word_Count; i++)
     {
         if (space_separate_words && (i > 0)) oss << " ";
-        oss << std::setw(8) << message_digest[i];
+        oss << std::setw(8) << digest_view[i];
     }
 
     return oss.str();
@@ -814,12 +821,15 @@ std::span<std::uint8_t> SHA1::Result(std::span<std::uint8_t> result) const
         throw HashException("SHA-1 result input span is too short");
     }
 
+    // Define a span for the benefit of bounds checking
+    const auto digest_view = std::span(message_digest);
+
     for (std::size_t i = 0, j = 0; i < Digest_Word_Count; i++, j += 4)
     {
-        result[j    ] = (message_digest[i] >> 24) & 0xff;
-        result[j + 1] = (message_digest[i] >> 16) & 0xff;
-        result[j + 2] = (message_digest[i] >>  8) & 0xff;
-        result[j + 3] = (message_digest[i]      ) & 0xff;
+        result[j    ] = (digest_view[i] >> 24) & 0xff;
+        result[j + 1] = (digest_view[i] >> 16) & 0xff;
+        result[j + 2] = (digest_view[i] >>  8) & 0xff;
+        result[j + 3] = (digest_view[i]      ) & 0xff;
     }
 
     return result.first(Digest_Octet_Count);

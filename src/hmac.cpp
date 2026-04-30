@@ -28,6 +28,7 @@
 #include <climits>
 #include <algorithm>
 #include <ranges>
+#include <span>
 #include <terra/crypto/hash/hmac.h>
 #include <terra/crypto/hash/sha1.h>
 #include <terra/crypto/hash/sha224.h>
@@ -647,10 +648,13 @@ void HMAC::SetKey(const std::span<const std::uint8_t> key)
     }
 
     // Compute the results of XORing the key with ipad and opad
+    auto K0_ipad_view = std::span(K0_ipad);
+    auto K0_opad_view = std::span(K0_opad);
+    auto K0_view = std::span(K0);
     for (std::size_t i = 0; i < block_size; i++)
     {
-        K0_ipad[i] = K0[i] ^ ipad;
-        K0_opad[i] = K0[i] ^ opad;
+        K0_ipad_view[i] = K0_view[i] ^ ipad;
+        K0_opad_view[i] = K0_view[i] ^ opad;
     }
 
     // Feed the hash algorithm K0 ^ ipad

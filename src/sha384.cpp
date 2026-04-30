@@ -200,7 +200,8 @@ constexpr void Step3(const std::size_t t,
                SHA384_sigma_0(W[t - 15]) + W[t - 16];
     }
 
-    T = h_ + SHA384_SIGMA_1(e_) + SHA384_Ch(e_, f_, g_) + K_t[t] + W[t];
+    const auto K_t_view = std::span(K_t);
+    T = h_ + SHA384_SIGMA_1(e_) + SHA384_Ch(e_, f_, g_) + K_t_view[t] + W[t];
 
     d_ += T;
 
@@ -495,7 +496,7 @@ void SHA384::Input(const std::span<const std::uint8_t> data)
     if constexpr (sizeof(std::size_t) >= 16)
     {
         // Ensure that the length doesn't exceed the maximum length
-        if (SHA384MessageLength{ data.size(), 0 } > Max_Message_Size)
+        if (SHA384MessageLength{.high = data.size(), .low{}} > Max_Message_Size)
         {
             throw HashException("Input length too long");
         }
@@ -791,16 +792,19 @@ void SHA384::Finalize()
  */
 void SHA384::PadMessage()
 {
+    // Define a span over the input_block array (for bounds checking)
+    auto input_view = std::span(input_block);
+
     // Append 0x80 to the end of the message
-    input_block[input_block_length++] = 0x80;
+    input_view[input_block_length++] = 0x80;
 
     // Pad out to a full input block if we have more than 896 bits (112 octets)
     if (input_block_length > 112)
     {
         // Pad the input block with zeros
-        std::memset(input_block.data() + input_block_length,
-                    0,
-                    128 - input_block_length);
+        std::ranges::fill(input_view.subspan(input_block_length,
+                                             Block_Size - input_block_length),
+                          static_cast<std::uint8_t>(0));
 
         // The input block is now 128 octets, but that will be reset below
 
@@ -814,9 +818,9 @@ void SHA384::PadMessage()
     // Pad up to 896 bits (112 octets)
     if (input_block_length < 112)
     {
-        std::memset(input_block.data() + input_block_length,
-                    0,
-                    112 - input_block_length);
+        std::ranges::fill(
+            input_view.subspan(input_block_length, 112 - input_block_length),
+            static_cast<std::uint8_t>(0));
     }
 
     // The final 128 bits contain the message length (convert length to bits),
@@ -828,12 +832,12 @@ void SHA384::PadMessage()
     length_low <<= 3;
     for (std::size_t i = 119; i > 111; i--)
     {
-        input_block[i] = length_high & 0xff;
+        input_view[i] = length_high & 0xff;
         length_high >>= 8;
     }
     for (std::size_t i = 127; i > 119; i--)
     {
-        input_block[i] = length_low & 0xff;
+        input_view[i] = length_low & 0xff;
         length_low >>= 8;
     }
 
@@ -876,10 +880,13 @@ std::string SHA384::Result() const
 
     oss << std::hex << std::setfill('0');
 
+    // Define a span for the benefit of bounds checking
+    const auto digest_view = std::span(message_digest);
+
     for (std::size_t i = 0; i < Digest_Word_Count; i++)
     {
         if (space_separate_words && (i > 0)) oss << " ";
-        oss << std::setw(16) << message_digest[i];
+        oss << std::setw(16) << digest_view[i];
     }
 
     return oss.str();
@@ -923,16 +930,19 @@ std::span<std::uint8_t> SHA384::Result(std::span<std::uint8_t> result) const
         throw HashException("SHA-384 result input span is too short");
     }
 
+    // Define a span for the benefit of bounds checking
+    const auto digest_view = std::span(message_digest);
+
     for (std::size_t i = 0, j = 0; i < Digest_Word_Count; i++, j += 8)
     {
-        result[j    ] = (message_digest[i] >> 56) & 0xff;
-        result[j + 1] = (message_digest[i] >> 48) & 0xff;
-        result[j + 2] = (message_digest[i] >> 40) & 0xff;
-        result[j + 3] = (message_digest[i] >> 32) & 0xff;
-        result[j + 4] = (message_digest[i] >> 24) & 0xff;
-        result[j + 5] = (message_digest[i] >> 16) & 0xff;
-        result[j + 6] = (message_digest[i] >>  8) & 0xff;
-        result[j + 7] = (message_digest[i]      ) & 0xff;
+        result[j    ] = (digest_view[i] >> 56) & 0xff;
+        result[j + 1] = (digest_view[i] >> 48) & 0xff;
+        result[j + 2] = (digest_view[i] >> 40) & 0xff;
+        result[j + 3] = (digest_view[i] >> 32) & 0xff;
+        result[j + 4] = (digest_view[i] >> 24) & 0xff;
+        result[j + 5] = (digest_view[i] >> 16) & 0xff;
+        result[j + 6] = (digest_view[i] >>  8) & 0xff;
+        result[j + 7] = (digest_view[i]      ) & 0xff;
     }
 
     return result.first(Digest_Octet_Count);

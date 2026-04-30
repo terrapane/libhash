@@ -4,7 +4,7 @@ v1.1.0
 
 - Changed code so that "hashing" was replaced with "hash"
 - Formatting changes
-- Improvement in use of std::span
+- Improvement in use of std::span for bounds checking benefit
 - Switched from memcpy to std::ranged::copy
 
 v1.0.11
