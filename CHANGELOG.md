@@ -6,6 +6,7 @@ v1.1.0
 - Formatting changes
 - Improvement in use of std::span for bounds checking benefit
 - Switched from memcpy to std::ranged::copy
+- Updated dependencies
 
 v1.0.11
 
