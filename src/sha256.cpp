@@ -20,12 +20,19 @@
  *      This code assumes the compiler and platform can support 64-bit integers.
  */
 
+#include <iostream>
 #include <cstring>
 #include <algorithm>
 #include <iomanip>
 #include <sstream>
 #include <climits>
-#include <ranges>
+#include <cstdint>
+#include <cstddef>
+#include <string_view>
+#include <string>
+#include <span>
+#include <array>
+#include <terra/crypto/hash/hash.h>
 #include <terra/crypto/hash/sha256.h>
 #include <terra/secutil/secure_erase.h>
 #include <terra/bitutil/bit_rotation.h>
@@ -94,12 +101,12 @@ constexpr std::uint32_t SHA256_sigma_1(const std::uint32_t x)
 
 // Function to help populate the message schedule
 constexpr std::uint32_t GetMessageWord(
-    const std::span<const std::uint8_t, SHA256::Block_Size> &message_block,
+    std::span<const std::uint8_t, SHA256::Block_Size> message_block,
     const std::size_t index)
 {
-    return (static_cast<std::uint32_t>(message_block[index    ]) << 24) |
-           (static_cast<std::uint32_t>(message_block[index + 1]) << 16) |
-           (static_cast<std::uint32_t>(message_block[index + 2]) <<  8) |
+    return (static_cast<std::uint32_t>(message_block[index    ]) << 24U) |
+           (static_cast<std::uint32_t>(message_block[index + 1]) << 16U) |
+           (static_cast<std::uint32_t>(message_block[index + 2]) <<  8U) |
            (static_cast<std::uint32_t>(message_block[index + 3]));
 }
 
@@ -198,7 +205,6 @@ constexpr void Step3(const std::size_t t,
  *      None.
  */
 SHA256::SHA256() noexcept :
-    Hash(),
     message_length{},
     input_block_length{},
     input_block{},
@@ -242,7 +248,7 @@ SHA256::SHA256() noexcept :
  *  Comments:
  *      None.
  */
-SHA256::SHA256(const std::span<const std::uint8_t> data,
+SHA256::SHA256(std::span<const std::uint8_t> data,
                bool auto_finalize,
                bool spaces) :
     Hash(spaces),
@@ -457,7 +463,7 @@ void SHA256::Reset() noexcept
  *      already been computed or if the message size exceeds the allowable
  *      length of (2^64)-1 bits.
  */
-void SHA256::Input(const std::span<const std::uint8_t> data)
+void SHA256::Input(std::span<const std::uint8_t> data)
 {
     std::size_t consumed = 0;
     std::size_t to_be_consumed = 0;
@@ -584,7 +590,7 @@ void SHA256::Input(const std::string_view data)
  *      specified here are defined in FIPS 180-4 section 6.2.2.
  */
 void SHA256::ProcessMessageBlock(
-    const std::span<const std::uint8_t, Block_Size> &message_block)
+    std::span<const std::uint8_t, Block_Size> message_block)
 {
     // STEP 1
 
@@ -778,11 +784,11 @@ void SHA256::PadMessage()
     }
 
     // The final 64 bits contain the message length (convert length to bits)
-    std::uint64_t length = message_length << 3;
+    std::uint64_t length = message_length << 3U;
     for (std::size_t i = 63; i > 55; i--)
     {
-        input_view[i] = length & 0xff;
-        length >>= 8;
+        input_view[i] = length & 0xffU;
+        length >>= 8U;
     }
 
     // Process the current input block
@@ -879,10 +885,10 @@ std::span<std::uint8_t> SHA256::Result(std::span<std::uint8_t> result) const
 
     for (std::size_t i = 0, j = 0; i < Digest_Word_Count; i++, j += 4)
     {
-        result[j    ] = (digest_view[i] >> 24) & 0xff;
-        result[j + 1] = (digest_view[i] >> 16) & 0xff;
-        result[j + 2] = (digest_view[i] >>  8) & 0xff;
-        result[j + 3] = (digest_view[i]      ) & 0xff;
+        result[j    ] = (digest_view[i] >> 24U) & 0xffU;
+        result[j + 1] = (digest_view[i] >> 16U) & 0xffU;
+        result[j + 2] = (digest_view[i] >>  8U) & 0xffU;
+        result[j + 3] = (digest_view[i]       ) & 0xffU;
     }
 
     return result.first(Digest_Octet_Count);

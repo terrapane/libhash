@@ -23,13 +23,19 @@
  *      This code assumes the compiler and platform can support 64-bit integers.
  */
 
+#include <ostream>
 #include <memory>
 #include <cstring>
 #include <climits>
 #include <algorithm>
-#include <ranges>
+#include <cstdint>
+#include <cstddef>
+#include <string_view>
 #include <span>
+#include <utility>
+#include <string>
 #include <terra/crypto/hash/hmac.h>
+#include <terra/crypto/hash/hash.h>
 #include <terra/crypto/hash/sha1.h>
 #include <terra/crypto/hash/sha224.h>
 #include <terra/crypto/hash/sha256.h>
@@ -151,8 +157,8 @@ bool CompareHashFunction(const std::unique_ptr<Hash> &hash1,
             break;
 
         case HashAlgorithm::SHA224:
-            result = (*dynamic_cast<SHA256*>(hash1.get()) ==
-                      *dynamic_cast<SHA256 *>(hash2.get()));
+            result = (*dynamic_cast<SHA224 *>(hash1.get()) ==
+                      *dynamic_cast<SHA224 *>(hash2.get()));
             break;
 
         case HashAlgorithm::SHA256:
@@ -161,13 +167,13 @@ bool CompareHashFunction(const std::unique_ptr<Hash> &hash1,
             break;
 
         case HashAlgorithm::SHA384:
-            result = (*dynamic_cast<SHA256 *>(hash1.get()) ==
-                      *dynamic_cast<SHA256 *>(hash2.get()));
+            result = (*dynamic_cast<SHA384 *>(hash1.get()) ==
+                      *dynamic_cast<SHA384 *>(hash2.get()));
             break;
 
         case HashAlgorithm::SHA512:
-            result = (*dynamic_cast<SHA256 *>(hash1.get()) ==
-                      *dynamic_cast<SHA256 *>(hash2.get()));
+            result = (*dynamic_cast<SHA512 *>(hash1.get()) ==
+                      *dynamic_cast<SHA512 *>(hash2.get()));
             break;
 
         default:
@@ -252,7 +258,7 @@ HMAC::HMAC(const HashAlgorithm hash_algorithm) :
  *      function.
  */
 HMAC::HMAC(const HashAlgorithm hash_algorithm,
-           const std::span<const std::uint8_t> key,
+           std::span<const std::uint8_t> key,
            const bool spaces) :
     HMAC(hash_algorithm)
 {
@@ -600,7 +606,7 @@ void HMAC::Reset()
  *      If the key length exceeds the octet limit of the underlying hash
  *      function an exception will be thrown.
  */
-void HMAC::SetKey(const std::span<const std::uint8_t> key)
+void HMAC::SetKey(std::span<const std::uint8_t> key)
 {
     // If there is no hash object, create one (this might be due to std::move
     // being used on the object)
@@ -708,7 +714,7 @@ void HMAC::SetKey(const std::string_view key)
  *  Comments:
  *      None.
  */
-void HMAC::Input(const std::span<const std::uint8_t> data)
+void HMAC::Input(std::span<const std::uint8_t> data)
 {
     // Ensure the hash is keyed
     if (!keyed) throw HashException("No key was provided to HMAC");

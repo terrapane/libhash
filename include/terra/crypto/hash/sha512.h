@@ -116,8 +116,8 @@ class SHA512 final : public Hash
         // Maximum message size per FIPS 180-4 (in octets)
         static constexpr SHA512MessageLength Max_Message_Size
         {
-            (static_cast<std::uint64_t>(1) << 61) - 1,
-            0xffff'ffff'ffff'ffff
+            .high = (static_cast<std::uint64_t>(1) << 61U) - 1,
+            .low = 0xffff'ffff'ffff'ffffULL
         };
 
         // Size of each input block (in octets)
@@ -136,15 +136,15 @@ class SHA512 final : public Hash
         static constexpr std::size_t Message_Schedule_Size = 80;
 
         SHA512() noexcept;
-        SHA512(const std::span<const std::uint8_t> data,
-               bool auto_finalize = true,
-               bool spaces = true);
-        SHA512(const std::string_view data,
-               bool auto_finalize = true,
-               bool spaces = true);
+        explicit SHA512(std::span<const std::uint8_t> data,
+                        bool auto_finalize = true,
+                        bool spaces = true);
+        explicit SHA512(const std::string_view data,
+                        bool auto_finalize = true,
+                        bool spaces = true);
         SHA512(const SHA512 &other) = default;
         SHA512(SHA512 &&other) = default;
-        virtual ~SHA512() noexcept;
+        ~SHA512() noexcept override;
 
         SHA512 &operator=(const SHA512 &other) = default;
         SHA512 &operator=(SHA512 &&other) = default;
@@ -153,7 +153,7 @@ class SHA512 final : public Hash
 
         void Reset() noexcept override;
 
-        void Input(const std::span<const std::uint8_t> data) override;
+        void Input(std::span<const std::uint8_t> data) override;
         void Input(const std::string_view data) override;
 
         void Finalize() override;
@@ -180,7 +180,7 @@ class SHA512 final : public Hash
 
     protected:
         void ProcessMessageBlock(
-            const std::span<const std::uint8_t, Block_Size> &message_block);
+            std::span<const std::uint8_t, Block_Size> message_block);
 
         void PadMessage();
 

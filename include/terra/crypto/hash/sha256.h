@@ -59,7 +59,7 @@ class SHA256 final : public Hash
         // Maximum message size per FIPS 180-4 (in octets)
         static constexpr std::uint64_t Max_Message_Size
         {
-            (static_cast<std::uint64_t>(1) << 61) - 1
+            (static_cast<std::uint64_t>(1) << 61U) - 1
         };
 
         // Size of each input block (in octets)
@@ -78,15 +78,15 @@ class SHA256 final : public Hash
         static constexpr std::size_t Message_Schedule_Size = 64;
 
         SHA256() noexcept;
-        SHA256(const std::span<const std::uint8_t> data,
-               bool auto_finalize = true,
-               bool spaces = true);
-        SHA256(const std::string_view data,
-               bool auto_finalize = true,
-               bool spaces = true);
+        explicit SHA256(std::span<const std::uint8_t> data,
+                        bool auto_finalize = true,
+                        bool spaces = true);
+        explicit SHA256(const std::string_view data,
+                        bool auto_finalize = true,
+                        bool spaces = true);
         SHA256(const SHA256 &other) = default;
         SHA256(SHA256 &&other) = default;
-        virtual ~SHA256() noexcept;
+        ~SHA256() noexcept override;
 
         SHA256 &operator=(const SHA256 &other) = default;
         SHA256 &operator=(SHA256 &&other) = default;
@@ -95,7 +95,7 @@ class SHA256 final : public Hash
 
         void Reset() noexcept override;
 
-        void Input(const std::span<const std::uint8_t> data) override;
+        void Input(std::span<const std::uint8_t> data) override;
         void Input(const std::string_view data) override;
 
         void Finalize() override;
@@ -122,7 +122,7 @@ class SHA256 final : public Hash
 
     protected:
         void ProcessMessageBlock(
-            const std::span<const std::uint8_t, Block_Size> &message_block);
+            std::span<const std::uint8_t, Block_Size> message_block);
 
         void PadMessage();
 

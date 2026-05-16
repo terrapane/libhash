@@ -17,8 +17,14 @@
  *      This code assumes the compiler and platform can support 64-bit integers.
  */
 
+#include <ostream>
 #include <climits>
 #include <cstring>
+#include <cstdint>
+#include <cstddef>
+#include <string_view>
+#include <span>
+#include <memory>
 #include <terra/crypto/hash/hash.h>
 #include <terra/crypto/hash/sha1.h>
 #include <terra/crypto/hash/sha224.h>

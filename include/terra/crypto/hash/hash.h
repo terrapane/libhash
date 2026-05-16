@@ -55,7 +55,7 @@ namespace Terra::Crypto::Hash
 {
 
 // Enum to define supported hash function types
-enum class HashAlgorithm
+enum class HashAlgorithm : std::uint8_t
 {
     SHA1,
     SHA224,
@@ -95,7 +95,7 @@ class Hash
 {
     public:
         Hash() noexcept;
-        Hash(bool spaces) noexcept;
+        explicit Hash(bool spaces) noexcept;
         Hash(const Hash &other) = default;
         Hash(Hash &&other) = default;
         virtual ~Hash() noexcept;
@@ -107,7 +107,7 @@ class Hash
 
         virtual void Reset() noexcept = 0;
 
-        virtual void Input(const std::span<const std::uint8_t> data) = 0;
+        virtual void Input(std::span<const std::uint8_t> data) = 0;
         virtual void Input(const std::string_view data) = 0;
 
         Hash &operator<<(const std::string_view data);

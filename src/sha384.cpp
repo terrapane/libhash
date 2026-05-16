@@ -20,12 +20,19 @@
  *      This code assumes the compiler and platform can support 64-bit integers.
  */
 
+#include <iostream>
 #include <cstring>
 #include <algorithm>
 #include <iomanip>
 #include <sstream>
 #include <climits>
-#include <ranges>
+#include <cstdint>
+#include <cstddef>
+#include <string_view>
+#include <string>
+#include <span>
+#include <array>
+#include <terra/crypto/hash/hash.h>
 #include <terra/crypto/hash/sha384.h>
 #include <terra/secutil/secure_erase.h>
 #include <terra/bitutil/bit_rotation.h>
@@ -118,16 +125,16 @@ constexpr std::uint64_t SHA384_sigma_1(const std::uint64_t x)
 
 // Function to help populate the message schedule
 constexpr std::uint64_t GetMessageWord(
-    const std::span<const std::uint8_t, SHA384::Block_Size> &message_block,
+    std::span<const std::uint8_t, SHA384::Block_Size> message_block,
     const std::size_t index)
 {
-    return (static_cast<std::uint64_t>(message_block[index    ]) << 56) |
-           (static_cast<std::uint64_t>(message_block[index + 1]) << 48) |
-           (static_cast<std::uint64_t>(message_block[index + 2]) << 40) |
-           (static_cast<std::uint64_t>(message_block[index + 3]) << 32) |
-           (static_cast<std::uint64_t>(message_block[index + 4]) << 24) |
-           (static_cast<std::uint64_t>(message_block[index + 5]) << 16) |
-           (static_cast<std::uint64_t>(message_block[index + 6]) <<  8) |
+    return (static_cast<std::uint64_t>(message_block[index    ]) << 56U) |
+           (static_cast<std::uint64_t>(message_block[index + 1]) << 48U) |
+           (static_cast<std::uint64_t>(message_block[index + 2]) << 40U) |
+           (static_cast<std::uint64_t>(message_block[index + 3]) << 32U) |
+           (static_cast<std::uint64_t>(message_block[index + 4]) << 24U) |
+           (static_cast<std::uint64_t>(message_block[index + 5]) << 16U) |
+           (static_cast<std::uint64_t>(message_block[index + 6]) <<  8U) |
            (static_cast<std::uint64_t>(message_block[index + 7]));
 }
 
@@ -226,7 +233,6 @@ constexpr void Step3(const std::size_t t,
  *      None.
  */
 SHA384::SHA384() noexcept :
-    Hash(),
     message_length{},
     input_block_length{},
     input_block{},
@@ -270,7 +276,7 @@ SHA384::SHA384() noexcept :
  *  Comments:
  *      None.
  */
-SHA384::SHA384(const std::span<const std::uint8_t> data,
+SHA384::SHA384(std::span<const std::uint8_t> data,
                bool auto_finalize,
                bool spaces) :
     Hash(spaces),
@@ -487,7 +493,7 @@ void SHA384::Reset() noexcept
  *      already been computed or if the message size exceeds the allowable
  *      length of (2^128)-1 bits.
  */
-void SHA384::Input(const std::span<const std::uint8_t> data)
+void SHA384::Input(std::span<const std::uint8_t> data)
 {
     std::size_t consumed = 0;
     std::size_t to_be_consumed = 0;
@@ -614,7 +620,7 @@ void SHA384::Input(const std::string_view data)
  *      specified here are defined in FIPS 180-4 section 6.4.2.
  */
 void SHA384::ProcessMessageBlock(
-    const std::span<const std::uint8_t, Block_Size> &message_block)
+    std::span<const std::uint8_t, Block_Size> message_block)
 {
     // STEP 1
 
@@ -827,18 +833,18 @@ void SHA384::PadMessage()
     // but we need to shift bits to convert from octets
     std::uint64_t length_low = message_length.low;
     std::uint64_t length_high = message_length.high;
-    length_high <<= 3;
-    length_high |= ((length_low & 0xe000000000000000) >> 61);
-    length_low <<= 3;
+    length_high <<= 3U;
+    length_high |= ((length_low & 0xe000000000000000) >> 61U);
+    length_low <<= 3U;
     for (std::size_t i = 119; i > 111; i--)
     {
-        input_view[i] = length_high & 0xff;
-        length_high >>= 8;
+        input_view[i] = length_high & 0xffU;
+        length_high >>= 8U;
     }
     for (std::size_t i = 127; i > 119; i--)
     {
-        input_view[i] = length_low & 0xff;
-        length_low >>= 8;
+        input_view[i] = length_low & 0xffU;
+        length_low >>= 8U;
     }
 
     // Process the current input block
@@ -935,14 +941,14 @@ std::span<std::uint8_t> SHA384::Result(std::span<std::uint8_t> result) const
 
     for (std::size_t i = 0, j = 0; i < Digest_Word_Count; i++, j += 8)
     {
-        result[j    ] = (digest_view[i] >> 56) & 0xff;
-        result[j + 1] = (digest_view[i] >> 48) & 0xff;
-        result[j + 2] = (digest_view[i] >> 40) & 0xff;
-        result[j + 3] = (digest_view[i] >> 32) & 0xff;
-        result[j + 4] = (digest_view[i] >> 24) & 0xff;
-        result[j + 5] = (digest_view[i] >> 16) & 0xff;
-        result[j + 6] = (digest_view[i] >>  8) & 0xff;
-        result[j + 7] = (digest_view[i]      ) & 0xff;
+        result[j    ] = (digest_view[i] >> 56U) & 0xffU;
+        result[j + 1] = (digest_view[i] >> 48U) & 0xffU;
+        result[j + 2] = (digest_view[i] >> 40U) & 0xffU;
+        result[j + 3] = (digest_view[i] >> 32U) & 0xffU;
+        result[j + 4] = (digest_view[i] >> 24U) & 0xffU;
+        result[j + 5] = (digest_view[i] >> 16U) & 0xffU;
+        result[j + 6] = (digest_view[i] >>  8U) & 0xffU;
+        result[j + 7] = (digest_view[i]       ) & 0xffU;
     }
 
     return result.first(Digest_Octet_Count);

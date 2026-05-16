@@ -56,7 +56,7 @@ class SHA1 final : public Hash
         // Maximum message size per FIPS 180-4 (in octets)
         static constexpr std::uint64_t Max_Message_Size
         {
-            (static_cast<std::uint64_t>(1) << 61) - 1
+            (static_cast<std::uint64_t>(1) << 61U) - 1
         };
 
         // Size of each input block (in octets)
@@ -75,15 +75,15 @@ class SHA1 final : public Hash
         static constexpr std::size_t Message_Schedule_Size = 80;
 
         SHA1() noexcept;
-        SHA1(const std::span<const std::uint8_t> data,
-             bool auto_finalize = true,
-             bool spaces = true);
-        SHA1(const std::string_view data,
-             bool auto_finalize = true,
-             bool spaces = true);
+        explicit SHA1(std::span<const std::uint8_t> data,
+                      bool auto_finalize = true,
+                      bool spaces = true);
+        explicit SHA1(const std::string_view data,
+                      bool auto_finalize = true,
+                      bool spaces = true);
         SHA1(const SHA1 &other) = default;
         SHA1(SHA1 &&other) = default;
-        virtual ~SHA1() noexcept;
+        ~SHA1() noexcept override;
 
         SHA1 &operator=(const SHA1 &other) = default;
         SHA1 &operator=(SHA1 &&other) = default;
@@ -92,7 +92,7 @@ class SHA1 final : public Hash
 
         void Reset() noexcept override;
 
-        void Input(const std::span<const std::uint8_t> data) override;
+        void Input(std::span<const std::uint8_t> data) override;
         void Input(const std::string_view data) override;
 
         void Finalize() override;
@@ -119,7 +119,7 @@ class SHA1 final : public Hash
 
     protected:
         void ProcessMessageBlock(
-            const std::span<const std::uint8_t, Block_Size> &message_block);
+            std::span<const std::uint8_t, Block_Size> message_block);
 
         void PadMessage();
 

@@ -43,12 +43,12 @@ class HMAC
         static constexpr std::size_t Max_Digest = 64;
 
     public:
-        HMAC(const HashAlgorithm hash_algorithm);
+        explicit HMAC(const HashAlgorithm hash_algorithm);
         HMAC(const HashAlgorithm hash_algorithm,
-             const std::span<const std::uint8_t> key,
+             std::span<const std::uint8_t> key,
              const bool spaces = true);
         HMAC(const HashAlgorithm hash_algorithm,
-             const std::string_view key,
+             std::string_view key,
              const bool spaces = true);
         HMAC(const HMAC &other);
         HMAC(HMAC &&other) noexcept;
@@ -61,12 +61,12 @@ class HMAC
 
         void Reset();
 
-        void SetKey(const std::span<const std::uint8_t> key);
-        void SetKey(const std::string_view key);
+        void SetKey(std::span<const std::uint8_t> key);
+        void SetKey(std::string_view key);
 
-        void Input(const std::span<const std::uint8_t> data);
-        void Input(const std::string_view data);
-        HMAC &operator<<(const std::string_view data);
+        void Input(std::span<const std::uint8_t> data);
+        void Input(std::string_view data);
+        HMAC &operator<<(std::string_view data);
 
         void Finalize();
 
