@@ -26,13 +26,13 @@ endif()
 # Fetch the common security-related utility functions
 FetchContent_Declare(secutil
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/secutil.git
-    GIT_TAG        v1.1.0
+    GIT_TAG        v1.1.1
     GIT_SHALLOW    true)
 
 # Fetch the bit-related utility functions
 FetchContent_Declare(bitutil
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/bitutil.git
-    GIT_TAG        v1.0.6
+    GIT_TAG        v1.0.7
     GIT_SHALLOW    true)
 
 # If not installing libhash, turn off installation for dependencies

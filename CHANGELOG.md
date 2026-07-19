@@ -1,5 +1,10 @@
 # Change Log
 
+v1.1.1
+
+- Stricter compiler warnings
+- Updated dependencies
+
 v1.1.0
 
 - Changed code so that "hashing" was replaced with "hash"
